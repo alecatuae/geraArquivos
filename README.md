@@ -93,20 +93,24 @@ gerar_arquivos(config)
 ## 📁 Estrutura dos Arquivos Gerados
 
 ### TXT
-- Linhas de texto aleatório
-- Data de geração
-- ID único do arquivo
+- Texto Lorem Ipsum profissional
+- Cabeçalho e rodapé formatados
+- Data de geração e ID único
+- Controle de tamanho baseado em MB
 - Codificação UTF-8
 
 ### PDF
-- Múltiplas linhas de texto
-- Formato padrão A4
-- Texto posicionado verticalmente
+- Texto Lorem Ipsum profissional
+- Formato padrão A4 com quebra de página automática
+- Quebra de linha inteligente (80 caracteres)
+- Controle de tamanho baseado em MB
 
 ### DOCX
-- Múltiplos parágrafos
-- Texto aleatório em cada parágrafo
+- Texto Lorem Ipsum em parágrafos
+- Título e seção de informações
+- Data de geração e ID único
 - Formatação padrão do Word
+- Controle de tamanho baseado em MB
 
 ### XLSX
 - Planilha com 15 colunas de dados realistas
@@ -152,6 +156,28 @@ Os arquivos XLSX agora utilizam a biblioteca **Faker** para gerar dados realista
 
 Execute `python exemplo_faker.py` para ver demonstrações específicas da funcionalidade Faker.
 
+## 📝 Texto Lorem Ipsum
+
+Os arquivos **TXT**, **PDF** e **DOCX** agora utilizam a biblioteca **lorem-text** para gerar texto Lorem Ipsum profissional:
+
+### Características do Lorem Ipsum:
+- **Texto clássico**: Lorem ipsum dolor sit amet, consectetur adipiscing elit...
+- **Parágrafos variados**: Tamanho aleatório entre 50-200 palavras
+- **Quebra inteligente**: Linhas respeitam limite de caracteres
+- **Formatação profissional**: Cabeçalhos, rodapés e estrutura organizada
+
+### Controle de Tamanho por Tipo:
+- **TXT**: ~1 caractere = 1 byte (controle preciso)
+- **PDF**: Redução de 30% devido ao overhead de formatação
+- **DOCX**: Redução de 50% devido ao overhead de XML
+
+### Estrutura dos Arquivos:
+- **TXT**: Cabeçalho, parágrafos numerados, rodapé com informações
+- **PDF**: Quebra de página automática, quebra de linha em 80 caracteres
+- **DOCX**: Título, parágrafos Lorem Ipsum, seção de informações
+
+Execute `python exemplo_lorem.py` para ver demonstrações específicas da funcionalidade Lorem Ipsum.
+
 ## 📦 Dependências
 
 - PIL (Pillow)
@@ -160,6 +186,7 @@ Execute `python exemplo_faker.py` para ver demonstrações específicas da funci
 - pandas
 - openpyxl
 - faker
+- lorem-text
 
 ## 🔧 Instalação
 

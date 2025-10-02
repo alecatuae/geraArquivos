@@ -9,6 +9,7 @@ import pandas as pd
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 from faker import Faker
+from lorem_text import lorem
 
 # Pasta onde salvar os arquivos
 OUTPUT_DIR = "arquivos_teste"
@@ -83,6 +84,88 @@ def gerar_dados_realistas_xlsx(num_linhas):
     }
     return dados
 
+# Funções auxiliares para gerar textos longos com Lorem Ipsum
+def gerar_texto_lorem_ipsum(tamanho_mb_alvo, tipo_arquivo="txt"):
+    """
+    Gera texto Lorem Ipsum baseado no tamanho alvo em MB
+    
+    Args:
+        tamanho_mb_alvo: Tamanho alvo em MB
+        tipo_arquivo: Tipo do arquivo (txt, pdf, docx)
+    
+    Returns:
+        Lista de strings com o texto gerado
+    """
+    # Calcular quantidade de caracteres necessários baseado no tamanho
+    # Assumindo ~1 caractere = 1 byte para texto simples
+    caracteres_necessarios = int(tamanho_mb_alvo * 1024 * 1024)
+    
+    # Ajustar baseado no tipo de arquivo
+    if tipo_arquivo == "pdf":
+        # PDF tem overhead de formatação, reduzir em 30%
+        caracteres_necessarios = int(caracteres_necessarios * 0.7)
+    elif tipo_arquivo == "docx":
+        # DOCX tem overhead de XML, reduzir em 50%
+        caracteres_necessarios = int(caracteres_necessarios * 0.5)
+    
+    # Garantir mínimo de caracteres
+    caracteres_necessarios = max(caracteres_necessarios, 1000)
+    
+    textos = []
+    caracteres_gerados = 0
+    
+    while caracteres_gerados < caracteres_necessarios:
+        # Gerar parágrafo com tamanho variável
+        tamanho_paragrafo = random.randint(50, 200)  # palavras por parágrafo
+        paragrafo = lorem.paragraph()
+        
+        # Se o parágrafo for muito pequeno, gerar mais texto
+        while len(paragrafo) < 100:
+            paragrafo += " " + lorem.sentence()
+        
+        textos.append(paragrafo)
+        caracteres_gerados += len(paragrafo)
+        
+        # Adicionar quebra de linha
+        if tipo_arquivo == "txt":
+            caracteres_gerados += 1  # \n
+    
+    return textos
+
+def gerar_texto_lorem_por_linhas(num_linhas, caracteres_por_linha=80):
+    """
+    Gera texto Lorem Ipsum com número específico de linhas
+    
+    Args:
+        num_linhas: Número de linhas a gerar
+        caracteres_por_linha: Caracteres por linha
+    
+    Returns:
+        Lista de strings com as linhas geradas
+    """
+    linhas = []
+    
+    for i in range(num_linhas):
+        # Gerar linha com tamanho variável
+        tamanho_linha = random.randint(caracteres_por_linha // 2, caracteres_por_linha)
+        
+        # Gerar texto até atingir o tamanho desejado
+        linha = ""
+        while len(linha) < tamanho_linha:
+            palavra = lorem.word()
+            if len(linha) + len(palavra) + 1 <= tamanho_linha:
+                linha += palavra + " " if linha else palavra
+            else:
+                break
+        
+        # Adicionar número da linha se for TXT
+        if caracteres_por_linha <= 100:  # Assumindo que é TXT
+            linha = f"Linha {i+1}: {linha.strip()}"
+        
+        linhas.append(linha.strip())
+    
+    return linhas
+
 # Funções auxiliares para controle de tamanho
 def calcular_tamanho_arquivo(caminho_arquivo):
     """Calcula o tamanho do arquivo em MB"""
@@ -91,20 +174,16 @@ def calcular_tamanho_arquivo(caminho_arquivo):
 def ajustar_conteudo_para_tamanho(tipo_arquivo, tamanho_mb_alvo, config):
     """Ajusta o conteúdo baseado no tamanho alvo"""
     if tipo_arquivo == "txt":
-        # Para TXT: ~1 caractere = 1 byte, então 1MB = ~1M caracteres
-        caracteres_por_linha = config["caracteres_por_linha"]
-        linhas_necessarias = int((tamanho_mb_alvo * 1024 * 1024) / caracteres_por_linha)
-        return max(linhas_necessarias, 1)
+        # Para TXT: usar Lorem Ipsum baseado no tamanho
+        return tamanho_mb_alvo
     
     elif tipo_arquivo == "pdf":
-        # Para PDF: estimativa baseada em linhas
-        linhas_necessarias = int(tamanho_mb_alvo * 50)  # Aproximação
-        return max(linhas_necessarias, 1)
+        # Para PDF: usar Lorem Ipsum baseado no tamanho
+        return tamanho_mb_alvo
     
     elif tipo_arquivo == "docx":
-        # Para DOCX: estimativa baseada em parágrafos
-        paragrafos_necessarios = int(tamanho_mb_alvo * 30)  # Aproximação
-        return max(paragrafos_necessarios, 1)
+        # Para DOCX: usar Lorem Ipsum baseado no tamanho
+        return tamanho_mb_alvo
     
     elif tipo_arquivo == "xlsx":
         # Para XLSX: estimativa baseada em linhas
@@ -139,24 +218,75 @@ def gerar_jpeg(nome, config, tamanho_mb_alvo=None):
 
 # Gerar PDF
 def gerar_pdf(nome, config, tamanho_mb_alvo=None):
-    linhas = config["linhas"]
     if tamanho_mb_alvo:
-        linhas = ajustar_conteudo_para_tamanho("pdf", tamanho_mb_alvo, config)
+        # Usar Lorem Ipsum baseado no tamanho
+        textos = gerar_texto_lorem_ipsum(tamanho_mb_alvo, "pdf")
+    else:
+        # Usar configuração padrão
+        linhas = config["linhas"]
+        textos = gerar_texto_lorem_por_linhas(linhas, config["caracteres_por_linha"])
     
     c = canvas.Canvas(nome)
-    for i in range(linhas):
-        c.drawString(100, 800 - i*100, texto_aleatorio(config["caracteres_por_linha"]))
+    y_pos = 800
+    
+    for texto in textos:
+        # Quebrar texto em linhas se necessário
+        palavras = texto.split()
+        linha_atual = ""
+        
+        for palavra in palavras:
+            if len(linha_atual + " " + palavra) <= 80:  # Limite de caracteres por linha
+                linha_atual += " " + palavra if linha_atual else palavra
+            else:
+                if linha_atual:
+                    c.drawString(100, y_pos, linha_atual)
+                    y_pos -= 20
+                    if y_pos < 50:  # Nova página se necessário
+                        c.showPage()
+                        y_pos = 800
+                linha_atual = palavra
+        
+        # Desenhar última linha
+        if linha_atual:
+            c.drawString(100, y_pos, linha_atual)
+            y_pos -= 20
+            if y_pos < 50:
+                c.showPage()
+                y_pos = 800
+    
     c.save()
 
 # Gerar DOCX
 def gerar_docx(nome, config, tamanho_mb_alvo=None):
-    paragrafos = config["paragrafos"]
     if tamanho_mb_alvo:
-        paragrafos = ajustar_conteudo_para_tamanho("docx", tamanho_mb_alvo, config)
+        # Usar Lorem Ipsum baseado no tamanho
+        textos = gerar_texto_lorem_ipsum(tamanho_mb_alvo, "docx")
+    else:
+        # Usar configuração padrão
+        paragrafos = config["paragrafos"]
+        textos = []
+        for i in range(paragrafos):
+            # Gerar parágrafo Lorem Ipsum
+            paragrafo = lorem.paragraph()
+            while len(paragrafo) < config["caracteres_por_paragrafo"]:
+                paragrafo += " " + lorem.sentence()
+            textos.append(paragrafo)
     
     doc = Document()
-    for i in range(paragrafos):
-        doc.add_paragraph(texto_aleatorio(config["caracteres_por_paragrafo"]))
+    
+    # Adicionar título
+    doc.add_heading('Documento Lorem Ipsum', 0)
+    
+    # Adicionar parágrafos
+    for texto in textos:
+        doc.add_paragraph(texto)
+    
+    # Adicionar informações do documento
+    doc.add_heading('Informações do Documento', level=1)
+    doc.add_paragraph(f'Data de geração: {fake.date_time_this_year().strftime("%d/%m/%Y %H:%M")}')
+    doc.add_paragraph(f'ID do documento: {fake.uuid4()}')
+    doc.add_paragraph(f'Tamanho alvo: {tamanho_mb_alvo:.2f} MB' if tamanho_mb_alvo else 'Tamanho padrão')
+    
     doc.save(nome)
 
 # Gerar XLSX
@@ -189,15 +319,34 @@ def gerar_xlsx(nome, config, tamanho_mb_alvo=None):
 
 # Gerar TXT
 def gerar_txt(nome, config, tamanho_mb_alvo=None):
-    linhas = config["linhas"]
     if tamanho_mb_alvo:
-        linhas = ajustar_conteudo_para_tamanho("txt", tamanho_mb_alvo, config)
+        # Usar Lorem Ipsum baseado no tamanho
+        textos = gerar_texto_lorem_ipsum(tamanho_mb_alvo, "txt")
+    else:
+        # Usar configuração padrão
+        linhas = config["linhas"]
+        textos = gerar_texto_lorem_por_linhas(linhas, config["caracteres_por_linha"])
     
     with open(nome, 'w', encoding='utf-8') as arquivo:
-        for i in range(linhas):
-            arquivo.write(f"Linha {i+1}: {texto_aleatorio(config['caracteres_por_linha'])}\n")
-        arquivo.write(f"\nData de geração: {random.randint(1, 31)}/{random.randint(1, 12)}/{random.randint(2020, 2024)}\n")
-        arquivo.write(f"ID do arquivo: {texto_aleatorio(16)}\n")
+        # Escrever cabeçalho
+        arquivo.write("=" * 80 + "\n")
+        arquivo.write("DOCUMENTO LOREM IPSUM\n")
+        arquivo.write("=" * 80 + "\n\n")
+        
+        # Escrever conteúdo Lorem Ipsum
+        for i, texto in enumerate(textos, 1):
+            arquivo.write(f"Parágrafo {i}:\n")
+            arquivo.write(texto + "\n\n")
+        
+        # Escrever rodapé
+        arquivo.write("=" * 80 + "\n")
+        arquivo.write("INFORMAÇÕES DO DOCUMENTO\n")
+        arquivo.write("=" * 80 + "\n")
+        arquivo.write(f"Data de geração: {fake.date_time_this_year().strftime('%d/%m/%Y %H:%M')}\n")
+        arquivo.write(f"ID do arquivo: {fake.uuid4()}\n")
+        arquivo.write(f"Tamanho alvo: {tamanho_mb_alvo:.2f} MB\n" if tamanho_mb_alvo else "Tamanho padrão\n")
+        arquivo.write(f"Total de parágrafos: {len(textos)}\n")
+        arquivo.write("=" * 80 + "\n")
 
 # Função principal
 def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
