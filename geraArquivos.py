@@ -8,10 +8,14 @@ from docx import Document
 import pandas as pd
 from dataclasses import dataclass
 from typing import Dict, List, Optional
+from faker import Faker
 
 # Pasta onde salvar os arquivos
 OUTPUT_DIR = "arquivos_teste"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# Instância global do Faker para gerar dados realistas
+fake = Faker('pt_BR')  # Português brasileiro
 
 @dataclass
 class ConfiguracaoArquivos:
@@ -49,13 +53,35 @@ class ConfiguracaoArquivos:
                 "jpeg": {"linhas_texto": 50, "resolucao": (800, 600)},
                 "pdf": {"linhas": 5, "caracteres_por_linha": 80},
                 "docx": {"paragrafos": 5, "caracteres_por_paragrafo": 120},
-                "xlsx": {"linhas": 20, "colunas": 3},
+                "xlsx": {"linhas": 20, "colunas": 15},  # 15 colunas com dados realistas
                 "txt": {"linhas": 10, "caracteres_por_linha": 80}
             }
 
 # Função para gerar texto aleatório
 def texto_aleatorio(tamanho=100):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=tamanho))
+
+# Funções auxiliares para gerar dados realistas com Faker
+def gerar_dados_realistas_xlsx(num_linhas):
+    """Gera dados realistas para planilha XLSX usando Faker"""
+    dados = {
+        "ID": [fake.random_int(min=1000, max=9999) for _ in range(num_linhas)],
+        "Nome": [fake.name() for _ in range(num_linhas)],
+        "Email": [fake.email() for _ in range(num_linhas)],
+        "Telefone": [fake.phone_number() for _ in range(num_linhas)],
+        "Endereço": [fake.address().replace('\n', ', ') for _ in range(num_linhas)],
+        "Cidade": [fake.city() for _ in range(num_linhas)],
+        "Estado": [fake.state() for _ in range(num_linhas)],
+        "CEP": [fake.postcode() for _ in range(num_linhas)],
+        "Data_Nascimento": [fake.date_of_birth(minimum_age=18, maximum_age=80).strftime('%d/%m/%Y') for _ in range(num_linhas)],
+        "Profissão": [fake.job() for _ in range(num_linhas)],
+        "Empresa": [fake.company() for _ in range(num_linhas)],
+        "Salário": [fake.random_int(min=1500, max=15000) for _ in range(num_linhas)],
+        "Data_Contrato": [fake.date_between(start_date='-5y', end_date='today').strftime('%d/%m/%Y') for _ in range(num_linhas)],
+        "Status": [fake.random_element(elements=('Ativo', 'Inativo', 'Férias', 'Licença')) for _ in range(num_linhas)],
+        "Observações": [fake.text(max_nb_chars=100) for _ in range(num_linhas)]
+    }
+    return dados
 
 # Funções auxiliares para controle de tamanho
 def calcular_tamanho_arquivo(caminho_arquivo):
@@ -82,8 +108,10 @@ def ajustar_conteudo_para_tamanho(tipo_arquivo, tamanho_mb_alvo, config):
     
     elif tipo_arquivo == "xlsx":
         # Para XLSX: estimativa baseada em linhas
-        linhas_necessarias = int(tamanho_mb_alvo * 200)  # Aproximação
-        return max(linhas_necessarias, 1)
+        # Considerando ~15 colunas com dados realistas, cada linha ≈ 0.5KB
+        # Então 1MB ≈ 2000 linhas
+        linhas_necessarias = int(tamanho_mb_alvo * 2000)
+        return max(linhas_necessarias, 10)  # Mínimo de 10 linhas
     
     elif tipo_arquivo == "jpeg":
         # Para JPEG: ajustar resolução baseada no tamanho
@@ -137,12 +165,27 @@ def gerar_xlsx(nome, config, tamanho_mb_alvo=None):
     if tamanho_mb_alvo:
         linhas = ajustar_conteudo_para_tamanho("xlsx", tamanho_mb_alvo, config)
     
-    df = pd.DataFrame({
-        "Coluna1": [texto_aleatorio(10) for _ in range(linhas)],
-        "Coluna2": [random.randint(1, 1000) for _ in range(linhas)],
-        "Coluna3": [random.random() for _ in range(linhas)]
-    })
-    df.to_excel(nome, index=False)
+    # Gerar dados realistas usando Faker
+    dados = gerar_dados_realistas_xlsx(linhas)
+    df = pd.DataFrame(dados)
+    
+    # Salvar com formatação melhorada
+    with pd.ExcelWriter(nome, engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name='Dados', index=False)
+        
+        # Ajustar largura das colunas automaticamente
+        worksheet = writer.sheets['Dados']
+        for column in worksheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)  # Máximo de 50 caracteres
+            worksheet.column_dimensions[column_letter].width = adjusted_width
 
 # Gerar TXT
 def gerar_txt(nome, config, tamanho_mb_alvo=None):

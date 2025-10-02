@@ -109,8 +109,10 @@ gerar_arquivos(config)
 - Formatação padrão do Word
 
 ### XLSX
-- Planilha com 3 colunas
-- Dados aleatórios (texto, números, decimais)
+- Planilha com 15 colunas de dados realistas
+- Dados gerados com biblioteca Faker em português brasileiro
+- Colunas incluem: ID, Nome, Email, Telefone, Endereço, Cidade, Estado, CEP, Data_Nascimento, Profissão, Empresa, Salário, Data_Contrato, Status, Observações
+- Formatação automática de colunas
 - Formato Excel padrão
 
 ### JPEG
@@ -122,6 +124,34 @@ gerar_arquivos(config)
 
 Execute `python exemplo_uso.py` para ver demonstrações completas de todas as funcionalidades.
 
+## 🎭 Dados Realistas com Faker
+
+Os arquivos XLSX agora utilizam a biblioteca **Faker** para gerar dados realistas em português brasileiro:
+
+### Colunas Geradas Automaticamente:
+- **ID**: Números únicos de 1000-9999
+- **Nome**: Nomes completos brasileiros
+- **Email**: Endereços de email realistas
+- **Telefone**: Números de telefone no formato brasileiro
+- **Endereço**: Endereços completos com bairro e cidade
+- **Cidade**: Nomes de cidades brasileiras
+- **Estado**: Estados brasileiros
+- **CEP**: Códigos postais válidos
+- **Data_Nascimento**: Datas de nascimento (18-80 anos)
+- **Profissão**: Profissões diversas
+- **Empresa**: Nomes de empresas
+- **Salário**: Valores salariais (R$ 1.500 - R$ 15.000)
+- **Data_Contrato**: Datas de contratação (últimos 5 anos)
+- **Status**: Status do funcionário (Ativo, Inativo, Férias, Licença)
+- **Observações**: Textos aleatórios de até 100 caracteres
+
+### Controle de Tamanho:
+- **0.1 MB**: ~200 linhas
+- **0.5 MB**: ~1000 linhas  
+- **1.0 MB**: ~2000 linhas
+
+Execute `python exemplo_faker.py` para ver demonstrações específicas da funcionalidade Faker.
+
 ## 📦 Dependências
 
 - PIL (Pillow)
@@ -129,6 +159,7 @@ Execute `python exemplo_uso.py` para ver demonstrações completas de todas as f
 - python-docx
 - pandas
 - openpyxl
+- faker
 
 ## 🔧 Instalação
 
