@@ -45,10 +45,18 @@ def gerar_xlsx(nome):
     })
     df.to_excel(nome, index=False)
 
+# Gerar TXT
+def gerar_txt(nome):
+    with open(nome, 'w', encoding='utf-8') as arquivo:
+        for i in range(10):  # 10 linhas de texto
+            arquivo.write(f"Linha {i+1}: {texto_aleatorio(80)}\n")
+        arquivo.write(f"\nData de geração: {random.randint(1, 31)}/{random.randint(1, 12)}/{random.randint(2020, 2024)}\n")
+        arquivo.write(f"ID do arquivo: {texto_aleatorio(16)}\n")
+
 # Função principal
 def gerar_arquivos(qtd=10):
     for i in range(qtd):
-        tipo = random.choice(["jpeg", "pdf", "docx", "xlsx"])
+        tipo = random.choice(["jpeg", "pdf", "docx", "xlsx", "txt"])
         nome = os.path.join(OUTPUT_DIR, f"arquivo_{i+1}.{tipo}")
         if tipo == "jpeg":
             gerar_jpeg(nome)
@@ -58,6 +66,8 @@ def gerar_arquivos(qtd=10):
             gerar_docx(nome)
         elif tipo == "xlsx":
             gerar_xlsx(nome)
+        elif tipo == "txt":
+            gerar_txt(nome)
         print(f"[OK] Gerado: {nome}")
 
 if __name__ == "__main__":
