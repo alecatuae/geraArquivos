@@ -6,10 +6,52 @@ from PIL import Image, ImageDraw
 from reportlab.pdfgen import canvas
 from docx import Document
 import pandas as pd
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 # Pasta onde salvar os arquivos
 OUTPUT_DIR = "arquivos_teste"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+@dataclass
+class ConfiguracaoArquivos:
+    """Configuração para geração de arquivos"""
+    # Tipos de arquivo ativados
+    tipos_ativados: List[str] = None
+    
+    # Quantidade de arquivos por tipo (None = aleatório)
+    quantidade_por_tipo: Dict[str, int] = None
+    
+    # Tamanho alvo em MB para cada tipo
+    tamanho_mb: Dict[str, float] = None
+    
+    # Configurações específicas por tipo
+    config_especifica: Dict[str, Dict] = None
+    
+    def __post_init__(self):
+        if self.tipos_ativados is None:
+            self.tipos_ativados = ["jpeg", "pdf", "docx", "xlsx", "txt"]
+        
+        if self.quantidade_por_tipo is None:
+            self.quantidade_por_tipo = {}
+        
+        if self.tamanho_mb is None:
+            self.tamanho_mb = {
+                "jpeg": 0.5,    # 500KB
+                "pdf": 1.0,     # 1MB
+                "docx": 0.8,    # 800KB
+                "xlsx": 0.3,    # 300KB
+                "txt": 0.1      # 100KB
+            }
+        
+        if self.config_especifica is None:
+            self.config_especifica = {
+                "jpeg": {"linhas_texto": 50, "resolucao": (800, 600)},
+                "pdf": {"linhas": 5, "caracteres_por_linha": 80},
+                "docx": {"paragrafos": 5, "caracteres_por_paragrafo": 120},
+                "xlsx": {"linhas": 20, "colunas": 3},
+                "txt": {"linhas": 10, "caracteres_por_linha": 80}
+            }
 
 # Função para gerar texto aleatório
 def texto_aleatorio(tamanho=100):
