@@ -1,0 +1,16 @@
+# Dependências para o projeto geraArquivos
+# Gerador de arquivos de teste em diferentes formatos
+
+# Manipulação de imagens
+Pillow>=10.0.0
+
+# Geração de PDFs
+reportlab>=4.0.0
+
+# Geração de documentos Word (.docx)
+python-docx>=0.8.11
+
+# Manipulação de dados e geração de Excel
+pandas>=2.0.0
+openpyxl>=3.1.0
+
