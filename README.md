@@ -178,6 +178,33 @@ Os arquivos **TXT**, **PDF** e **DOCX** agora utilizam a biblioteca **lorem-text
 
 Execute `python exemplo_lorem.py` para ver demonstrações específicas da funcionalidade Lorem Ipsum.
 
+## 📋 Arquivos de Procedimento
+
+### Scripts de Execução
+- **`executar.py`**: Script principal com verificação de ambiente e exemplos
+- **`ativar_ambiente.sh`**: Script automático para Linux/Mac
+- **`ativar_ambiente.bat`**: Script automático para Windows
+- **`configuracao.py`**: Configurações pré-definidas e personalização
+
+### Documentação
+- **`INSTRUCOES_EXECUCAO.md`**: Instruções detalhadas de execução
+- **`exemplo_uso.py`**: Exemplos básicos de uso
+- **`exemplo_faker.py`**: Exemplos específicos para XLSX com Faker
+- **`exemplo_lorem.py`**: Exemplos específicos para Lorem Ipsum
+
+### Uso das Configurações
+```python
+from configuracao import obter_configuracao
+from geraArquivos import gerar_arquivos
+
+# Usar configuração pré-definida
+config = obter_configuracao('media')
+gerar_arquivos(config)
+
+# Configurações disponíveis: 'padrao', 'pequena', 'media', 'grande', 
+# 'dados_realistas', 'lorem_ipsum'
+```
+
 ## 📦 Dependências
 
 - PIL (Pillow)
@@ -188,17 +215,58 @@ Execute `python exemplo_lorem.py` para ver demonstrações específicas da funci
 - faker
 - lorem-text
 
-## 🔧 Instalação
+## 🚀 Execução Rápida
 
+### Opção 1: Script Automático (Recomendado)
+
+#### Linux/Mac:
 ```bash
-# Ativar ambiente virtual
+chmod +x ativar_ambiente.sh
+./ativar_ambiente.sh
+```
+
+#### Windows:
+```cmd
+ativar_ambiente.bat
+```
+
+### Opção 2: Execução Manual
+
+#### Passo 1: Ativar Ambiente Virtual
+```bash
+# Linux/Mac
 source venv/bin/activate
 
-# Instalar dependências
+# Windows
+venv\Scripts\activate
+```
+
+#### Passo 2: Instalar Dependências
+```bash
+pip install -r requirements.txt
+```
+
+#### Passo 3: Executar
+```bash
+python executar.py
+```
+
+## 🔧 Instalação Inicial (Primeira Vez)
+
+```bash
+# 1. Criar ambiente virtual
+python -m venv venv
+
+# 2. Ativar ambiente virtual
+source venv/bin/activate  # Linux/Mac
+# ou
+venv\Scripts\activate     # Windows
+
+# 3. Instalar dependências
 pip install -r requirements.txt
 
-# Executar
-python geraArquivos.py
+# 4. Executar
+python executar.py
 ```
 
 ## 📊 Saída
