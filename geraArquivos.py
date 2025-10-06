@@ -27,6 +27,12 @@ class ConfiguracaoArquivos:
     # Quantidade de arquivos por tipo (None = aleatório)
     quantidade_por_tipo: Dict[str, int] = None
     
+    # Quantidade total de arquivos (ignora quantidade_por_tipo se especificado)
+    quantidade_total: int = None
+    
+    # Distribuição por percentual (ex: {"pdf": 70, "outros": 30})
+    percentual_por_tipo: Dict[str, float] = None
+    
     # Tamanho alvo em MB para cada tipo
     tamanho_mb: Dict[str, float] = None
     
@@ -170,6 +176,71 @@ def gerar_texto_lorem_por_linhas(num_linhas, caracteres_por_linha=80):
 def calcular_tamanho_arquivo(caminho_arquivo):
     """Calcula o tamanho do arquivo em MB"""
     return os.path.getsize(caminho_arquivo) / (1024 * 1024)
+
+# Funções auxiliares para distribuição por percentual
+def calcular_distribuicao_por_percentual(quantidade_total, percentual_por_tipo, tipos_ativados):
+    """
+    Calcula a distribuição de arquivos baseada em percentuais
+    
+    Args:
+        quantidade_total: Quantidade total de arquivos
+        percentual_por_tipo: Dicionário com percentuais por tipo
+        tipos_ativados: Lista de tipos ativados
+    
+    Returns:
+        Dict com quantidade por tipo
+    """
+    if not percentual_por_tipo:
+        return {}
+    
+    # Verificar se a soma dos percentuais é 100%
+    soma_percentuais = sum(percentual_por_tipo.values())
+    if abs(soma_percentuais - 100.0) > 0.01:  # Tolerância para arredondamento
+        print(f"⚠️  Aviso: Soma dos percentuais ({soma_percentuais}%) não é 100%")
+    
+    distribuicao = {}
+    total_distribuido = 0
+    
+    # Distribuir arquivos baseado nos percentuais
+    for tipo, percentual in percentual_por_tipo.items():
+        if tipo == "outros":
+            # Distribuir percentual "outros" entre tipos restantes
+            tipos_restantes = [t for t in tipos_ativados if t not in distribuicao]
+            if tipos_restantes:
+                percentual_por_tipo_restante = percentual / len(tipos_restantes)
+                for tipo_restante in tipos_restantes:
+                    quantidade = int(quantidade_total * percentual_por_tipo_restante / 100)
+                    distribuicao[tipo_restante] = quantidade
+                    total_distribuido += quantidade
+        else:
+            quantidade = int(quantidade_total * percentual / 100)
+            distribuicao[tipo] = quantidade
+            total_distribuido += quantidade
+    
+    # Ajustar diferenças de arredondamento
+    diferenca = quantidade_total - total_distribuido
+    if diferenca != 0:
+        # Adicionar a diferença ao tipo com maior quantidade
+        tipo_maior = max(distribuicao.keys(), key=lambda k: distribuicao[k])
+        distribuicao[tipo_maior] += diferenca
+    
+    return distribuicao
+
+def validar_percentuais(percentual_por_tipo):
+    """
+    Valida se os percentuais estão corretos
+    
+    Args:
+        percentual_por_tipo: Dicionário com percentuais
+    
+    Returns:
+        bool: True se válido, False caso contrário
+    """
+    if not percentual_por_tipo:
+        return True
+    
+    soma = sum(percentual_por_tipo.values())
+    return 99.0 <= soma <= 101.0  # Tolerância para arredondamento
 
 def ajustar_conteudo_para_tamanho(tipo_arquivo, tamanho_mb_alvo, config):
     """Ajusta o conteúdo baseado no tamanho alvo"""
@@ -363,11 +434,34 @@ def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
     # Determinar quantos arquivos gerar de cada tipo
     arquivos_para_gerar = {}
     
+    # Prioridade: quantidade_total > qtd_total > quantidade_por_tipo > aleatório
+    if config.quantidade_total is not None:
+        qtd_total = config.quantidade_total
+    
     if qtd_total is not None:
-        # Modo aleatório: distribuir qtd_total entre tipos ativados
-        for i in range(qtd_total):
-            tipo = random.choice(config.tipos_ativados)
-            arquivos_para_gerar[tipo] = arquivos_para_gerar.get(tipo, 0) + 1
+        # Verificar se há distribuição por percentual
+        if config.percentual_por_tipo:
+            # Validar percentuais
+            if not validar_percentuais(config.percentual_por_tipo):
+                print("❌ Erro: Percentuais inválidos (soma deve ser 100%)")
+                return
+            
+            # Calcular distribuição por percentual
+            arquivos_para_gerar = calcular_distribuicao_por_percentual(
+                qtd_total, config.percentual_por_tipo, config.tipos_ativados
+            )
+            
+            # Mostrar distribuição calculada
+            print(f"📊 Distribuição por percentual:")
+            for tipo, qtd in arquivos_para_gerar.items():
+                percentual = (qtd / qtd_total) * 100
+                print(f"   {tipo.upper()}: {qtd} arquivos ({percentual:.1f}%)")
+            print()
+        else:
+            # Modo aleatório: distribuir qtd_total entre tipos ativados
+            for i in range(qtd_total):
+                tipo = random.choice(config.tipos_ativados)
+                arquivos_para_gerar[tipo] = arquivos_para_gerar.get(tipo, 0) + 1
     else:
         # Modo controlado: usar quantidade_por_tipo
         for tipo in config.tipos_ativados:
@@ -379,6 +473,8 @@ def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
     
     # Gerar os arquivos
     contador_global = 1
+    total_gerado = 0
+    
     for tipo, quantidade in arquivos_para_gerar.items():
         for i in range(quantidade):
             nome = os.path.join(OUTPUT_DIR, f"arquivo_{contador_global}.{tipo}")
@@ -400,9 +496,12 @@ def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
                 tamanho_real = calcular_tamanho_arquivo(nome)
                 print(f"[OK] Gerado: {nome} ({tamanho_real:.2f} MB)")
                 contador_global += 1
+                total_gerado += 1
                 
             except Exception as e:
                 print(f"[ERRO] Falha ao gerar {nome}: {e}")
+    
+    print(f"\n✅ Total de arquivos gerados: {total_gerado}")
 
 # Funções de conveniência para configurações comuns
 def gerar_arquivos_aleatorios(qtd=20, tipos_ativados=None):
@@ -416,6 +515,33 @@ def gerar_arquivos_por_tipo(quantidade_por_tipo, tamanhos_mb=None):
     """Gera arquivos com quantidade específica por tipo"""
     config = ConfiguracaoArquivos()
     config.quantidade_por_tipo = quantidade_por_tipo
+    if tamanhos_mb:
+        config.tamanho_mb.update(tamanhos_mb)
+    gerar_arquivos(config)
+
+def gerar_arquivos_por_quantidade(quantidade_total, tipos_ativados=None):
+    """Gera arquivos com quantidade total específica"""
+    config = ConfiguracaoArquivos()
+    config.quantidade_total = quantidade_total
+    if tipos_ativados:
+        config.tipos_ativados = tipos_ativados
+    gerar_arquivos(config)
+
+def gerar_arquivos_por_percentual(quantidade_total, percentual_por_tipo, tipos_ativados=None, tamanhos_mb=None):
+    """
+    Gera arquivos com distribuição por percentual
+    
+    Args:
+        quantidade_total: Quantidade total de arquivos
+        percentual_por_tipo: Dicionário com percentuais (ex: {"pdf": 70, "outros": 30})
+        tipos_ativados: Lista de tipos ativados
+        tamanhos_mb: Tamanhos em MB por tipo
+    """
+    config = ConfiguracaoArquivos()
+    config.quantidade_total = quantidade_total
+    config.percentual_por_tipo = percentual_por_tipo
+    if tipos_ativados:
+        config.tipos_ativados = tipos_ativados
     if tamanhos_mb:
         config.tamanho_mb.update(tamanhos_mb)
     gerar_arquivos(config)
@@ -435,3 +561,16 @@ if __name__ == "__main__":
     print("\n=== Gerando arquivos aleatoriamente ===")
     # Configuração 2: Modo aleatório
     gerar_arquivos_aleatorios(10, ["jpeg", "xlsx", "txt"])
+    
+    print("\n=== Gerando arquivos por quantidade total ===")
+    # Configuração 3: Quantidade total específica
+    gerar_arquivos_por_quantidade(15, ["txt", "pdf", "docx"])
+    
+    print("\n=== Gerando arquivos por percentual ===")
+    # Configuração 4: Distribuição por percentual (70% PDF, 30% outros)
+    gerar_arquivos_por_percentual(
+        quantidade_total=20,
+        percentual_por_tipo={"pdf": 70, "outros": 30},
+        tipos_ativados=["txt", "pdf", "docx", "xlsx"],
+        tamanhos_mb={"txt": 0.1, "pdf": 0.3, "docx": 0.2, "xlsx": 0.1}
+    )

@@ -202,7 +202,49 @@ config = obter_configuracao('media')
 gerar_arquivos(config)
 
 # Configurações disponíveis: 'padrao', 'pequena', 'media', 'grande', 
-# 'dados_realistas', 'lorem_ipsum'
+# 'dados_realistas', 'lorem_ipsum', 'percentual_pdf', 
+# 'percentual_equilibrada', 'percentual_especifica'
+```
+
+## 📊 Controle de Quantidade e Percentual
+
+### Quantidade Total de Arquivos
+```python
+from geraArquivos import gerar_arquivos_por_quantidade
+
+# Gerar 50 arquivos aleatoriamente
+gerar_arquivos_por_quantidade(50, ["txt", "pdf", "docx"])
+```
+
+### Distribuição por Percentual
+```python
+from geraArquivos import gerar_arquivos_por_percentual
+
+# 70% PDF, 30% outros tipos
+gerar_arquivos_por_percentual(
+    quantidade_total=100,
+    percentual_por_tipo={"pdf": 70, "outros": 30},
+    tipos_ativados=["txt", "pdf", "docx", "xlsx"]
+)
+
+# Percentuais específicos para cada tipo
+gerar_arquivos_por_percentual(
+    quantidade_total=24,
+    percentual_por_tipo={"txt": 25, "pdf": 25, "docx": 25, "xlsx": 25}
+)
+```
+
+### Configuração Completa com Percentuais
+```python
+from geraArquivos import ConfiguracaoArquivos
+
+config = ConfiguracaoArquivos(
+    tipos_ativados=["txt", "pdf", "docx"],
+    quantidade_total=30,
+    percentual_por_tipo={"pdf": 60, "txt": 25, "outros": 15},
+    tamanho_mb={"txt": 0.2, "pdf": 0.4, "docx": 0.3}
+)
+gerar_arquivos(config)
 ```
 
 ## 📦 Dependências

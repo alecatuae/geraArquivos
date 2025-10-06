@@ -44,6 +44,30 @@ CONFIGURACAO_GRANDE = ConfiguracaoArquivos(
     tamanho_mb={"txt": 1.0, "pdf": 2.0, "docx": 1.5, "xlsx": 0.5}
 )
 
+# Configuração com distribuição por percentual (70% PDF, 30% outros)
+CONFIGURACAO_PERCENTUAL_PDF = ConfiguracaoArquivos(
+    tipos_ativados=["txt", "pdf", "docx", "xlsx"],
+    quantidade_total=20,
+    percentual_por_tipo={"pdf": 70, "outros": 30},
+    tamanho_mb={"txt": 0.1, "pdf": 0.3, "docx": 0.2, "xlsx": 0.1}
+)
+
+# Configuração com distribuição equilibrada (25% cada tipo)
+CONFIGURACAO_PERCENTUAL_EQUILIBRADA = ConfiguracaoArquivos(
+    tipos_ativados=["txt", "pdf", "docx", "xlsx"],
+    quantidade_total=24,
+    percentual_por_tipo={"txt": 25, "pdf": 25, "docx": 25, "xlsx": 25},
+    tamanho_mb={"txt": 0.1, "pdf": 0.2, "docx": 0.15, "xlsx": 0.1}
+)
+
+# Configuração com distribuição específica (50% TXT, 30% PDF, 20% DOCX)
+CONFIGURACAO_PERCENTUAL_ESPECIFICA = ConfiguracaoArquivos(
+    tipos_ativados=["txt", "pdf", "docx"],
+    quantidade_total=15,
+    percentual_por_tipo={"txt": 50, "pdf": 30, "docx": 20},
+    tamanho_mb={"txt": 0.2, "pdf": 0.4, "docx": 0.3}
+)
+
 # Configuração apenas para dados realistas (XLSX)
 CONFIGURACAO_DADOS_REALISTAS = ConfiguracaoArquivos(
     tipos_ativados=["xlsx"],
@@ -118,7 +142,8 @@ def obter_configuracao(nome="padrao"):
     
     Args:
         nome: Nome da configuração ('padrao', 'pequena', 'media', 'grande', 
-              'dados_realistas', 'lorem_ipsum')
+              'dados_realistas', 'lorem_ipsum', 'percentual_pdf', 
+              'percentual_equilibrada', 'percentual_especifica')
     
     Returns:
         ConfiguracaoArquivos
@@ -129,7 +154,10 @@ def obter_configuracao(nome="padrao"):
         "media": CONFIGURACAO_MEDIA,
         "grande": CONFIGURACAO_GRANDE,
         "dados_realistas": CONFIGURACAO_DADOS_REALISTAS,
-        "lorem_ipsum": CONFIGURACAO_LOREM_IPSUM
+        "lorem_ipsum": CONFIGURACAO_LOREM_IPSUM,
+        "percentual_pdf": CONFIGURACAO_PERCENTUAL_PDF,
+        "percentual_equilibrada": CONFIGURACAO_PERCENTUAL_EQUILIBRADA,
+        "percentual_especifica": CONFIGURACAO_PERCENTUAL_ESPECIFICA
     }
     
     return configuracoes.get(nome, CONFIGURACAO_PADRAO)
@@ -166,7 +194,10 @@ if __name__ == "__main__":
         ("media", "Arquivos médios - testes normais"),
         ("grande", "Arquivos grandes - testes de performance"),
         ("dados_realistas", "Apenas XLSX com dados realistas"),
-        ("lorem_ipsum", "Apenas texto Lorem Ipsum")
+        ("lorem_ipsum", "Apenas texto Lorem Ipsum"),
+        ("percentual_pdf", "70% PDF, 30% outros tipos"),
+        ("percentual_equilibrada", "25% cada tipo (equilibrada)"),
+        ("percentual_especifica", "50% TXT, 30% PDF, 20% DOCX")
     ]
     
     for nome, descricao in configuracoes:
