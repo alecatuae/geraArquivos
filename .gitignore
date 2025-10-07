@@ -46,6 +46,7 @@ Thumbs.db
 
 # Arquivos gerados
 arquivos_teste/
+minha_pasta/
 teste_*/
 exemplo_*/
 *.log
