@@ -16,6 +16,7 @@ Cria automaticamente arquivos de teste com:
 |---------|-----------|-----------|
 | **[setup.md](setup.md)** | 🛠️ Instalação completa do Python e dependências | Iniciantes |
 | **[howto.md](howto.md)** | 📖 Guia de uso prático com exemplos | Todos os usuários |
+| **[GERADOR_INFINITO.md](GERADOR_INFINITO.md)** | 🔄 Gerador em loop infinito para testes de storage | Testes avançados |
 
 ## 🚀 Início Rápido
 
@@ -58,6 +59,12 @@ Veja **[howto.md](howto.md)** para exemplos detalhados e comandos prontos para u
 - **Tamanhos personalizáveis**: Controle de MB por tipo
 - **Diretórios customizáveis**: Escolha onde salvar
 
+### 🔄 Gerador Infinito (Avançado)
+- **Loop infinito**: Para testes de storage contínuos
+- **Monitoramento**: Estatísticas em tempo real
+- **Teste de deduplicação**: Validar eficiência de storage
+- **Simulação de carga**: Popular storage com dados realistas
+
 ## 📁 Estrutura do Projeto
 
 ```
@@ -67,8 +74,11 @@ geraArquivos/
 ├── requirements.txt         # Dependências
 ├── setup.md                # Guia de instalação
 ├── howto.md                # Guia de uso
+├── GERADOR_INFINITO.md      # Gerador em loop infinito
+├── gerador_infinito.sh      # Script de loop infinito
+├── teste_gerador.sh         # Script de teste
 ├── README.md               # Este arquivo
-├── ativar_ambiente.sh      # Script Linux/Mac
+├── ativar_ambiente.sh        # Script Linux/Mac
 ├── ativar_ambiente.bat     # Script Windows
 └── venv/                   # Ambiente virtual
 ```
@@ -93,12 +103,22 @@ python -c "from geraArquivos import gerar; gerar(30, 'foco_imagens', 'imagens')"
 python -c "from geraArquivos import gerar; gerar(50, 'equilibrado', 'meus_arquivos')"
 ```
 
+### Gerador Infinito (Avançado)
+```bash
+# Teste inicial (3 iterações)
+./teste_gerador.sh
+
+# Execução infinita para testes de storage
+./gerador_infinito.sh
+```
+
 ## 📚 Próximos Passos
 
 1. **📖 [setup.md](setup.md)** - Instalação completa
 2. **📖 [howto.md](howto.md)** - Exemplos práticos e comandos
 3. **🧪 Teste básico** - Comece com `gerar(5)`
 4. **🎯 Explore templates** - Teste diferentes distribuições
+5. **🔄 [GERADOR_INFINITO.md](GERADOR_INFINITO.md)** - Para testes de storage avançados
 
 ---
 
