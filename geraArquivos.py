@@ -260,7 +260,6 @@ def gerar_wordcloud_lorem(config_wordcloud, resolucao):
     frequencias_padrao = config_global.get("frequencias_padrao", {
         "lorem": 10, "ipsum": 8, "dolor": 6, "sit": 5, "amet": 4
     })
-    cores_disponiveis = config_global.get("cores_disponiveis", ["viridis", "plasma", "inferno"])
     
     # Configurações do wordcloud
     max_palavras = config_wordcloud.get("max_palavras", 100)

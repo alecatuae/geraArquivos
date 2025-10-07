@@ -1,8 +1,7 @@
 {
   "configuracao_global": {
     "diretorio_padrao": "arquivos_teste",
-    "locale_faker": "pt_BR",
-    "encoding_padrao": "utf-8"
+    "locale_faker": "pt_BR"
   },
   
   "tipos_arquivo_padrao": [
@@ -132,9 +131,7 @@
     "frequencias_padrao": {
       "lorem": 10, "ipsum": 8, "dolor": 6, "sit": 5, "amet": 4, "consectetur": 3,
       "adipiscing": 3, "elit": 2, "sed": 2, "do": 2, "eiusmod": 1, "tempor": 1
-    },
-    "cores_disponiveis": ["viridis", "plasma", "inferno", "magma", "coolwarm", "hot", "spring", "summer", "autumn", "winter"],
-    "fontes_disponiveis": ["Arial", "Times", "Courier", "Helvetica", "Georgia", "Verdana"]
+    }
   },
   
   "configuracoes_controle_tamanho": {
@@ -157,11 +154,6 @@
     }
   },
   
-  "configuracoes_percentual": {
-    "tolerancia_percentual": 0.01,
-    "percentual_minimo": 99.0,
-    "percentual_maximo": 101.0
-  },
   
   "percentuais_padrao": {
     "equilibrado": {
@@ -194,19 +186,5 @@
       "txt": 70,
       "pdf": 30
     }
-  },
-  
-  "configuracoes_arquivo": {
-    "prefixo_nome": "arquivo_",
-    "separador_tipo": ".",
-    "contador_inicial": 1
-  },
-  
-  "configuracoes_saida": {
-    "mostrar_progresso": true,
-    "mostrar_tamanho": true,
-    "mostrar_caminho": true,
-    "formato_tamanho": "MB",
-    "casas_decimais": 2
   }
 }
