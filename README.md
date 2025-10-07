@@ -1,341 +1,105 @@
-# GeraArquivos - Gerador de Arquivos de Teste
+# 🚀 GeraArquivos - Gerador de Arquivos de Teste
 
-Sistema parametrizável para geração de arquivos de teste em diferentes formatos (JPEG, PNG, PDF, DOCX, XLSX, TXT) com wordclouds Lorem Ipsum.
+Sistema simples para gerar arquivos de teste em diferentes formatos (JPEG, PNG, PDF, DOCX, XLSX, TXT) com conteúdo realista.
+
+## 🎯 O que faz?
+
+Cria automaticamente arquivos de teste com:
+- **Imagens**: JPEG e PNG com wordclouds coloridos
+- **Documentos**: PDF e DOCX com texto Lorem Ipsum
+- **Planilhas**: XLSX com dados de funcionários
+- **Texto**: TXT com conteúdo estruturado
+
+## 📚 Documentação
+
+| Arquivo | Propósito | Para quem |
+|---------|-----------|-----------|
+| **[setup.md](setup.md)** | 🛠️ Instalação completa do Python e dependências | Iniciantes |
+| **[howto.md](howto.md)** | 📖 Guia de uso prático com exemplos | Todos os usuários |
+
+## 🚀 Início Rápido
+
+### 1. Instalação
+Siga o guia completo em **[setup.md](setup.md)** para instalar Python e dependências.
+
+### 2. Uso Básico
+```bash
+# Ativar ambiente
+source venv/bin/activate  # Linux/Mac
+# ou
+venv\Scripts\activate     # Windows
+
+# Gerar 10 arquivos
+python -c "from geraArquivos import gerar; gerar(10)"
+```
+
+### 3. Exemplos Práticos
+Veja **[howto.md](howto.md)** para exemplos detalhados e comandos prontos para usar.
+
+## 🎯 Funcionalidades Principais
+
+### 📁 Tipos de Arquivo Suportados
+- **JPEG/PNG**: Imagens com wordclouds coloridos
+- **PDF**: Documentos com texto Lorem Ipsum
+- **DOCX**: Documentos Word estruturados
+- **XLSX**: Planilhas com dados de funcionários
+- **TXT**: Arquivos de texto simples
+
+### 🎨 Templates Pré-definidos
+- **`equilibrado`**: Distribuição balanceada (padrão)
+- **`foco_imagens`**: 60% imagens (JPEG/PNG)
+- **`foco_documentos`**: 70% documentos (PDF/DOCX)
+- **`foco_dados`**: 50% planilhas (XLSX)
+- **`minimal`**: Apenas TXT e PDF
+
+### 🔧 Configuração
+- **config.json**: Todas as configurações centralizadas
+- **Nomes únicos**: SHA-1 para evitar conflitos
+- **Tamanhos personalizáveis**: Controle de MB por tipo
+- **Diretórios customizáveis**: Escolha onde salvar
 
 ## 📁 Estrutura do Projeto
 
 ```
 geraArquivos/
-├── geraArquivos.py          # Módulo principal com todas as funções
-├── config.json              # Configurações centralizadas
-├── requirements.txt         # Dependências Python
-├── README.md               # Documentação completa
-├── ativar_ambiente.sh      # Script de ativação (Linux/Mac)
-├── ativar_ambiente.bat     # Script de ativação (Windows)
-├── .gitignore              # Arquivos ignorados pelo Git
-└── venv/                   # Ambiente virtual Python
+├── geraArquivos.py          # Módulo principal
+├── config.json              # Configurações
+├── requirements.txt         # Dependências
+├── setup.md                # Guia de instalação
+├── howto.md                # Guia de uso
+├── README.md               # Este arquivo
+├── ativar_ambiente.sh      # Script Linux/Mac
+├── ativar_ambiente.bat     # Script Windows
+└── venv/                   # Ambiente virtual
 ```
 
-## 🚀 Setup do Projeto
+## 🚀 Exemplos Rápidos
 
-### Instalação Inicial
-
+### Uso Mais Simples
 ```bash
-# 1. Criar ambiente virtual
-python -m venv venv
-
-# 2. Ativar ambiente virtual
-source venv/bin/activate  # Linux/Mac
-# ou
-venv\Scripts\activate     # Windows
-
-# 3. Instalar dependências
-pip install -r requirements.txt
+# Gerar 20 arquivos
+python -c "from geraArquivos import gerar; gerar(20)"
 ```
 
-### Execução Rápida
-
-#### Opção 1: Script Automático (Recomendado)
-
-**Linux/Mac:**
+### Com Template Específico
 ```bash
-chmod +x ativar_ambiente.sh
-./ativar_ambiente.sh
+# Focar em imagens
+python -c "from geraArquivos import gerar; gerar(30, 'foco_imagens', 'imagens')"
 ```
 
-**Windows:**
-```cmd
-ativar_ambiente.bat
-```
-
-#### Opção 2: Execução Manual
-
+### Com Diretório Personalizado
 ```bash
-# Ativar ambiente virtual
-source venv/bin/activate  # Linux/Mac
-# ou
-venv\Scripts\activate     # Windows
-
-# Usar o sistema
-python -c "from geraArquivos import gerar_arquivos_aleatorios; gerar_arquivos_aleatorios(5)"
+# Salvar em pasta específica
+python -c "from geraArquivos import gerar; gerar(50, 'equilibrado', 'meus_arquivos')"
 ```
 
-## ⚙️ Parametrização (config.json)
+## 📚 Próximos Passos
 
-### Configurações Globais
+1. **📖 [setup.md](setup.md)** - Instalação completa
+2. **📖 [howto.md](howto.md)** - Exemplos práticos e comandos
+3. **🧪 Teste básico** - Comece com `gerar(5)`
+4. **🎯 Explore templates** - Teste diferentes distribuições
 
-```json
-{
-  "configuracao_global": {
-    "diretorio_padrao": "arquivos_teste",
-    "locale_faker": "pt_BR",
-    "encoding_padrao": "utf-8"
-  }
-}
-```
+---
 
-### Tipos de Arquivo e Tamanhos
-
-```json
-{
-  "tipos_arquivo_padrao": ["jpeg", "pdf", "docx", "xlsx", "txt"],
-  "tamanhos_mb_padrao": {
-    "jpeg": 0.5,
-    "pdf": 1.0,
-    "docx": 0.8,
-    "xlsx": 0.3,
-    "txt": 0.1
-  }
-}
-```
-
-### Configurações Específicas por Tipo
-
-#### JPEG
-```json
-{
-  "jpeg": {
-    "linhas_texto": 50,
-    "resolucao": [800, 600],
-    "qualidade": 85,
-    "formato_cor": "RGB"
-  }
-}
-```
-
-#### PDF
-```json
-{
-  "pdf": {
-    "linhas": 5,
-    "caracteres_por_linha": 80,
-    "margem_esquerda": 100,
-    "margem_superior": 800,
-    "espacamento_linhas": 20,
-    "altura_minima_pagina": 50,
-    "fonte_tamanho": 12
-  }
-}
-```
-
-#### DOCX
-```json
-{
-  "docx": {
-    "paragrafos": 5,
-    "caracteres_por_paragrafo": 120,
-    "incluir_titulo": true,
-    "incluir_informacoes": true,
-    "nivel_titulo": 0
-  }
-}
-```
-
-#### XLSX
-```json
-{
-  "xlsx": {
-    "linhas": 20,
-    "colunas": 15,
-    "ajustar_largura_colunas": true,
-    "largura_maxima_coluna": 50,
-    "incluir_cabecalho": true,
-    "nome_planilha": "Dados"
-  }
-}
-```
-
-#### TXT
-```json
-{
-  "txt": {
-    "linhas": 10,
-    "caracteres_por_linha": 80,
-    "incluir_cabecalho": true,
-    "incluir_rodape": true,
-    "separador_linha": "=",
-    "largura_separador": 80
-  }
-}
-```
-
-## 🎯 Execução (geraArquivos.py)
-
-### 🚀 Uso Simplificado (Recomendado)
-
-```python
-from geraArquivos import gerar
-
-# Uso mais simples - apenas quantidade
-gerar(50)
-
-# Com template específico
-gerar(100, "foco_imagens")
-
-# Com diretório personalizado
-gerar(30, "equilibrado", "meus_arquivos")
-
-# Todos os parâmetros
-gerar(200, "foco_documentos", "./documentos_teste")
-```
-
-### Uso Básico
-
-```python
-from geraArquivos import gerar_arquivos_aleatorios
-
-# Gerar 10 arquivos aleatórios
-gerar_arquivos_aleatorios(10)
-
-# Gerar apenas TXT e PDF
-gerar_arquivos_aleatorios(5, ["txt", "pdf"])
-
-# Com diretório personalizado
-gerar_arquivos_aleatorios(5, ["txt", "pdf"], "meus_arquivos")
-```
-
-### Configuração Avançada
-
-```python
-from geraArquivos import ConfiguracaoArquivos, gerar_arquivos
-
-# Configuração personalizada
-config = ConfiguracaoArquivos(
-    tipos_ativados=["txt", "pdf", "docx"],
-    quantidade_por_tipo={"txt": 3, "pdf": 2, "docx": 1},
-    tamanho_mb={"txt": 0.5, "pdf": 1.0, "docx": 0.8},
-    diretorio_destino="meus_arquivos_teste"
-)
-
-gerar_arquivos(config)
-```
-
-### Funções Disponíveis
-
-#### 🚀 Geração Simplificada (Recomendada)
-```python
-# Função mais simples - apenas 3 parâmetros
-gerar(quantidade, template="equilibrado", diretorio=None)
-
-# Exemplos:
-gerar(100)                                    # 100 arquivos, template "equilibrado"
-gerar(50, "foco_imagens")                    # 50 arquivos, template "foco_imagens"  
-gerar(30, "equilibrado", "meus_arquivos")   # 30 arquivos, diretório personalizado
-```
-
-#### Geração Aleatória
-```python
-gerar_arquivos_aleatorios(qtd=20, tipos_ativados=None, diretorio_destino=None)
-```
-
-#### Geração por Tipo
-```python
-gerar_arquivos_por_tipo(
-    quantidade_por_tipo={"txt": 2, "pdf": 3}, 
-    tamanhos_mb=None, 
-    diretorio_destino=None
-)
-```
-
-#### Geração por Quantidade Total
-```python
-gerar_arquivos_por_quantidade(
-    quantidade_total=15, 
-    tipos_ativados=["txt", "pdf", "docx"], 
-    diretorio_destino=None
-)
-```
-
-#### Geração por Percentual
-```python
-gerar_arquivos_por_percentual(
-    quantidade_total=100,
-    percentual_por_tipo={"pdf": 70, "outros": 30},
-    tipos_ativados=["txt", "pdf", "docx", "xlsx"],
-    tamanhos_mb={"txt": 0.1, "pdf": 0.3, "docx": 0.2, "xlsx": 0.1},
-    diretorio_destino=None
-)
-```
-
-#### Geração por Template (Novo!)
-```python
-# Usar templates pré-definidos do config.json
-gerar_arquivos_por_template(100, "equilibrado")
-gerar_arquivos_por_template(50, "foco_documentos")
-gerar_arquivos_por_template(30, "foco_dados", diretorio_destino="meus_arquivos")
-```
-
-### 🎯 Templates de Percentual Disponíveis
-
-| Template | Descrição | Distribuição |
-|----------|-----------|--------------|
-| `equilibrado` | Distribuição igual entre todos os tipos | ~17% cada tipo (6 tipos) |
-| `foco_documentos` | Foco em documentos | PDF 40%, DOCX 30%, TXT 20%, outros 10% |
-| `foco_dados` | Foco em planilhas e dados | XLSX 50%, TXT 25%, PDF 15%, outros 10% |
-| `foco_imagens` | Foco em imagens | JPEG 30%, PNG 30%, PDF 20%, outros 20% |
-| `minimal` | Apenas texto e PDF | TXT 70%, PDF 30% |
-
-## 📦 Dependências
-
-- PIL (Pillow)
-- reportlab
-- python-docx
-- pandas
-- openpyxl
-- faker
-- lorem-text
-- wordcloud
-- matplotlib
-
-## 📊 Saída
-
-O sistema exibe informações detalhadas sobre cada arquivo gerado:
-```
-[OK] Gerado: arquivos_teste/a1b2c3d4e5f6789012345678901234567890abcd.txt (0.23 MB)
-[OK] Gerado: arquivos_teste/f9e8d7c6b5a4938271605948372615049382716.pdf (0.45 MB)
-
-✅ Total de arquivos gerados: 2
-```
-
-### 🔐 Nomes Únicos com SHA-1
-
-Os arquivos são gerados com nomes únicos baseados em hash SHA-1, garantindo:
-- ✅ **Sem conflitos**: Nomes únicos mesmo em execuções simultâneas
-- ✅ **Sem contadores**: Não há necessidade de gerenciar contadores globais
-- ✅ **Identificação única**: Cada arquivo tem um identificador único de 40 caracteres
-- ✅ **Compatibilidade**: Funciona com todos os tipos de arquivo
-
-**Formato dos nomes**: `{hash_sha1}.{extensao}`
-- Exemplo: `a1b2c3d4e5f6789012345678901234567890abcd.txt`
-
-Arquivos são salvos na pasta `arquivos_teste/` por padrão (configurável via config.json).
-
-### 🎨 Wordclouds Lorem Ipsum
-
-Os arquivos JPEG e PNG agora são gerados como **wordclouds coloridos** com palavras do Lorem Ipsum:
-
-#### ✨ **Características dos Wordclouds:**
-- **Palavras Lorem Ipsum**: Texto clássico em latim
-- **Frequências Variadas**: Palavras com tamanhos diferentes baseados na frequência
-- **Cores Vibrantes**: Mapas de cores aleatórios (viridis, plasma, inferno, etc.)
-- **Layout Dinâmico**: Orientação otimizada para legibilidade
-- **Configurável**: Tamanhos, cores e palavras personalizáveis
-
-#### 🎯 **Configurações de Wordcloud:**
-```json
-"wordcloud": {
-  "max_palavras": 100,
-  "largura": 800,
-  "altura": 600,
-  "background_color": "white",
-  "colormap": "viridis",
-  "max_font_size": 100,
-  "min_font_size": 10,
-  "relative_scaling": 0.5,
-  "prefer_horizontal": 0.9
-}
-```
-
-#### 🖼️ **Diferenças JPEG vs PNG:**
-- **JPEG**: Fundo sólido, cores vibrantes, ideal para fotos
-- **PNG**: Suporte a transparência, cores mais suaves, ideal para gráficos
+**🎉 Pronto para gerar arquivos de teste!**
