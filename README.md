@@ -161,6 +161,24 @@ python -c "from geraArquivos import gerar_arquivos_aleatorios; gerar_arquivos_al
 
 ## 🎯 Execução (geraArquivos.py)
 
+### 🚀 Uso Simplificado (Recomendado)
+
+```python
+from geraArquivos import gerar
+
+# Uso mais simples - apenas quantidade
+gerar(50)
+
+# Com template específico
+gerar(100, "foco_imagens")
+
+# Com diretório personalizado
+gerar(30, "equilibrado", "meus_arquivos")
+
+# Todos os parâmetros
+gerar(200, "foco_documentos", "./documentos_teste")
+```
+
 ### Uso Básico
 
 ```python
@@ -193,6 +211,17 @@ gerar_arquivos(config)
 ```
 
 ### Funções Disponíveis
+
+#### 🚀 Geração Simplificada (Recomendada)
+```python
+# Função mais simples - apenas 3 parâmetros
+gerar(quantidade, template="equilibrado", diretorio=None)
+
+# Exemplos:
+gerar(100)                                    # 100 arquivos, template "equilibrado"
+gerar(50, "foco_imagens")                    # 50 arquivos, template "foco_imagens"  
+gerar(30, "equilibrado", "meus_arquivos")   # 30 arquivos, diretório personalizado
+```
 
 #### Geração Aleatória
 ```python

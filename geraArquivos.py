@@ -1188,3 +1188,41 @@ if __name__ == "__main__":
     print("\n=== Exemplo usando função de conveniência com diretório ===")
     # Usando função de conveniência com diretório personalizado
     gerar_arquivos_aleatorios(5, ["txt", "jpeg"], "arquivos_personalizados")
+
+def gerar(quantidade, template="equilibrado", diretorio=None):
+    """
+    Função simplificada para geração de arquivos com apenas 3 parâmetros.
+    
+    Esta é a função mais simples do sistema, permitindo gerar arquivos com
+    apenas quantidade, template e diretório. Ideal para uso rápido e direto.
+    
+    Args:
+        quantidade (int): Quantidade total de arquivos a gerar
+        template (str, optional): Template de percentual (padrão: "equilibrado")
+        diretorio (str, optional): Diretório de destino (padrão: do config.json)
+        
+    Templates Disponíveis:
+        - "equilibrado": Distribuição personalizada (JPEG 7%, PNG 16%, PDF 61%, etc.)
+        - "foco_documentos": Foco em documentos (PDF 40%, DOCX 30%, TXT 20%, outros 10%)
+        - "foco_dados": Foco em planilhas (XLSX 50%, TXT 25%, PDF 15%, outros 10%)
+        - "foco_imagens": Foco em imagens (JPEG 30%, PNG 30%, PDF 20%, outros 20%)
+        - "minimal": Apenas texto e PDF (TXT 70%, PDF 30%)
+        
+    Exemplos:
+        >>> # Uso mais simples - apenas quantidade
+        >>> gerar(50)
+        
+        >>> # Com template específico
+        >>> gerar(100, "foco_imagens")
+        
+        >>> # Com diretório personalizado
+        >>> gerar(30, "equilibrado", "meus_arquivos")
+        
+        >>> # Todos os parâmetros
+        >>> gerar(200, "foco_documentos", "./documentos_teste")
+    """
+    gerar_arquivos_por_template(
+        quantidade_total=quantidade,
+        template=template,
+        diretorio_destino=diretorio
+    )
