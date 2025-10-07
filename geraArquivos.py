@@ -39,6 +39,9 @@ class ConfiguracaoArquivos:
     # Configurações específicas por tipo
     config_especifica: Dict[str, Dict] = None
     
+    # Diretório de destino dos arquivos
+    diretorio_destino: str = None
+    
     def __post_init__(self):
         if self.tipos_ativados is None:
             self.tipos_ativados = ["jpeg", "pdf", "docx", "xlsx", "txt"]
@@ -431,6 +434,10 @@ def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
     if config is None:
         config = ConfiguracaoArquivos()
     
+    # Determinar diretório de destino
+    diretorio_destino = config.diretorio_destino if config.diretorio_destino else OUTPUT_DIR
+    os.makedirs(diretorio_destino, exist_ok=True)
+    
     # Determinar quantos arquivos gerar de cada tipo
     arquivos_para_gerar = {}
     
@@ -477,7 +484,7 @@ def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
     
     for tipo, quantidade in arquivos_para_gerar.items():
         for i in range(quantidade):
-            nome = os.path.join(OUTPUT_DIR, f"arquivo_{contador_global}.{tipo}")
+            nome = os.path.join(diretorio_destino, f"arquivo_{contador_global}.{tipo}")
             tamanho_alvo = config.tamanho_mb.get(tipo, 0.5)
             config_tipo = config.config_especifica.get(tipo, {})
             
@@ -504,30 +511,36 @@ def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
     print(f"\n✅ Total de arquivos gerados: {total_gerado}")
 
 # Funções de conveniência para configurações comuns
-def gerar_arquivos_aleatorios(qtd=20, tipos_ativados=None):
+def gerar_arquivos_aleatorios(qtd=20, tipos_ativados=None, diretorio_destino=None):
     """Gera arquivos aleatoriamente"""
     config = ConfiguracaoArquivos()
     if tipos_ativados:
         config.tipos_ativados = tipos_ativados
+    if diretorio_destino:
+        config.diretorio_destino = diretorio_destino
     gerar_arquivos(config, qtd)
 
-def gerar_arquivos_por_tipo(quantidade_por_tipo, tamanhos_mb=None):
+def gerar_arquivos_por_tipo(quantidade_por_tipo, tamanhos_mb=None, diretorio_destino=None):
     """Gera arquivos com quantidade específica por tipo"""
     config = ConfiguracaoArquivos()
     config.quantidade_por_tipo = quantidade_por_tipo
     if tamanhos_mb:
         config.tamanho_mb.update(tamanhos_mb)
+    if diretorio_destino:
+        config.diretorio_destino = diretorio_destino
     gerar_arquivos(config)
 
-def gerar_arquivos_por_quantidade(quantidade_total, tipos_ativados=None):
+def gerar_arquivos_por_quantidade(quantidade_total, tipos_ativados=None, diretorio_destino=None):
     """Gera arquivos com quantidade total específica"""
     config = ConfiguracaoArquivos()
     config.quantidade_total = quantidade_total
     if tipos_ativados:
         config.tipos_ativados = tipos_ativados
+    if diretorio_destino:
+        config.diretorio_destino = diretorio_destino
     gerar_arquivos(config)
 
-def gerar_arquivos_por_percentual(quantidade_total, percentual_por_tipo, tipos_ativados=None, tamanhos_mb=None):
+def gerar_arquivos_por_percentual(quantidade_total, percentual_por_tipo, tipos_ativados=None, tamanhos_mb=None, diretorio_destino=None):
     """
     Gera arquivos com distribuição por percentual
     
@@ -536,6 +549,7 @@ def gerar_arquivos_por_percentual(quantidade_total, percentual_por_tipo, tipos_a
         percentual_por_tipo: Dicionário com percentuais (ex: {"pdf": 70, "outros": 30})
         tipos_ativados: Lista de tipos ativados
         tamanhos_mb: Tamanhos em MB por tipo
+        diretorio_destino: Diretório de destino dos arquivos
     """
     config = ConfiguracaoArquivos()
     config.quantidade_total = quantidade_total
@@ -544,6 +558,8 @@ def gerar_arquivos_por_percentual(quantidade_total, percentual_por_tipo, tipos_a
         config.tipos_ativados = tipos_ativados
     if tamanhos_mb:
         config.tamanho_mb.update(tamanhos_mb)
+    if diretorio_destino:
+        config.diretorio_destino = diretorio_destino
     gerar_arquivos(config)
 
 if __name__ == "__main__":
@@ -574,3 +590,16 @@ if __name__ == "__main__":
         tipos_ativados=["txt", "pdf", "docx", "xlsx"],
         tamanhos_mb={"txt": 0.1, "pdf": 0.3, "docx": 0.2, "xlsx": 0.1}
     )
+    
+    print("\n=== Exemplo com diretório personalizado ===")
+    # Configuração 5: Usando diretório personalizado
+    config5 = ConfiguracaoArquivos(
+        tipos_ativados=["txt", "pdf"],
+        quantidade_por_tipo={"txt": 2, "pdf": 1},
+        diretorio_destino="meus_arquivos_teste"
+    )
+    gerar_arquivos(config5)
+    
+    print("\n=== Exemplo usando função de conveniência com diretório ===")
+    # Usando função de conveniência com diretório personalizado
+    gerar_arquivos_aleatorios(5, ["txt", "jpeg"], "arquivos_personalizados")
