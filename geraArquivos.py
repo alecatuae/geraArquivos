@@ -13,6 +13,9 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional
 from faker import Faker
 from lorem_text import lorem
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+import numpy as np
 
 def carregar_configuracao(caminho_config="config.json"):
     """
@@ -213,6 +216,106 @@ def texto_aleatorio(tamanho=100):
         'Xy7Zq'
     """
     return ''.join(random.choices(string.ascii_letters + string.digits, k=tamanho))
+
+def gerar_wordcloud_lorem(config_wordcloud, resolucao):
+    """
+    Gera um wordcloud com palavras Lorem Ipsum e frequências aleatórias.
+    
+    Esta função cria um wordcloud visualmente atrativo usando palavras do Lorem Ipsum
+    com frequências variadas, cores aleatórias e configurações personalizáveis.
+    O resultado é uma imagem colorida e dinâmica ideal para arquivos JPEG e PNG.
+    
+    Args:
+        config_wordcloud (dict): Configurações específicas do wordcloud
+            - max_palavras: Número máximo de palavras a incluir
+            - largura, altura: Dimensões do wordcloud
+            - background_color: Cor de fundo
+            - colormap: Mapa de cores (viridis, plasma, etc.)
+            - max_font_size, min_font_size: Tamanhos de fonte
+            - relative_scaling: Escala relativa das palavras
+            - prefer_horizontal: Preferência por orientação horizontal
+        resolucao (tuple): Resolução final (largura, altura)
+        
+    Returns:
+        PIL.Image: Imagem do wordcloud como objeto PIL
+        
+    Características:
+        - Palavras Lorem Ipsum clássicas
+        - Frequências variadas e realistas
+        - Cores vibrantes e aleatórias
+        - Layout otimizado para legibilidade
+        - Suporte a transparência (PNG)
+        
+    Exemplo:
+        >>> config = {"max_palavras": 50, "colormap": "viridis"}
+        >>> img = gerar_wordcloud_lorem(config, (800, 600))
+        >>> img.save("wordcloud.png")
+    """
+    # Carregar configurações de wordcloud do config.json
+    config_global = CONFIG.get("configuracoes_wordcloud", {})
+    palavras_lorem = config_global.get("palavras_lorem", [
+        "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",
+        "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore"
+    ])
+    frequencias_padrao = config_global.get("frequencias_padrao", {
+        "lorem": 10, "ipsum": 8, "dolor": 6, "sit": 5, "amet": 4
+    })
+    cores_disponiveis = config_global.get("cores_disponiveis", ["viridis", "plasma", "inferno"])
+    
+    # Configurações do wordcloud
+    max_palavras = config_wordcloud.get("max_palavras", 100)
+    largura = config_wordcloud.get("largura", 800)
+    altura = config_wordcloud.get("altura", 600)
+    background_color = config_wordcloud.get("background_color", "white")
+    colormap = config_wordcloud.get("colormap", "viridis")
+    max_font_size = config_wordcloud.get("max_font_size", 100)
+    min_font_size = config_wordcloud.get("min_font_size", 10)
+    relative_scaling = config_wordcloud.get("relative_scaling", 0.5)
+    prefer_horizontal = config_wordcloud.get("prefer_horizontal", 0.9)
+    
+    # Selecionar palavras aleatórias do Lorem Ipsum
+    palavras_selecionadas = random.sample(palavras_lorem, min(max_palavras, len(palavras_lorem)))
+    
+    # Gerar frequências variadas para as palavras
+    frequencias = {}
+    for palavra in palavras_selecionadas:
+        if palavra in frequencias_padrao:
+            # Usar frequência padrão com variação aleatória
+            base_freq = frequencias_padrao[palavra]
+            variacao = random.uniform(0.5, 2.0)
+            frequencias[palavra] = int(base_freq * variacao)
+        else:
+            # Frequência aleatória para palavras não padrão
+            frequencias[palavra] = random.randint(1, 5)
+    
+    # Garantir que pelo menos algumas palavras tenham frequência alta
+    palavras_principais = random.sample(palavras_selecionadas, min(5, len(palavras_selecionadas)))
+    for palavra in palavras_principais:
+        frequencias[palavra] = random.randint(8, 15)
+    
+    # Criar wordcloud
+    wordcloud = WordCloud(
+        width=largura,
+        height=altura,
+        background_color=background_color,
+        colormap=colormap,
+        max_font_size=max_font_size,
+        min_font_size=min_font_size,
+        relative_scaling=relative_scaling,
+        prefer_horizontal=prefer_horizontal,
+        max_words=max_palavras,
+        random_state=42  # Para reprodutibilidade
+    ).generate_from_frequencies(frequencias)
+    
+    # Converter para PIL Image
+    img_array = wordcloud.to_array()
+    img_pil = Image.fromarray(img_array)
+    
+    # Redimensionar se necessário
+    if resolucao != (largura, altura):
+        img_pil = img_pil.resize(resolucao, Image.Resampling.LANCZOS)
+    
+    return img_pil
 
 def gerar_dados_realistas_xlsx(num_linhas):
     """
@@ -550,133 +653,112 @@ def ajustar_conteudo_para_tamanho(tipo_arquivo, tamanho_mb_alvo, config):
 
 def gerar_jpeg(nome, config, tamanho_mb_alvo=None):
     """
-    Gera um arquivo JPEG com imagem colorida e texto sobreposto.
+    Gera um arquivo JPEG com wordcloud Lorem Ipsum.
     
-    Esta função cria uma imagem JPEG com cor de fundo aleatória e texto
-    sobreposto. A resolução é ajustada automaticamente baseada no tamanho
-    alvo em MB, garantindo que o arquivo tenha aproximadamente o tamanho desejado.
+    Esta função cria uma imagem JPEG com um wordcloud colorido e dinâmico
+    usando palavras do Lorem Ipsum com frequências variadas. A resolução
+    é ajustada automaticamente baseada no tamanho alvo em MB.
     
     Args:
         nome (str): Caminho completo onde salvar o arquivo JPEG
         config (dict): Configurações específicas para JPEG
             - resolucao: Tupla (largura, altura) da imagem
-            - linhas_texto: Número de caracteres do texto sobreposto
+            - wordcloud: Configurações do wordcloud
         tamanho_mb_alvo (float, optional): Tamanho alvo em MB para ajustar resolução
         
     Características:
-        - Cor de fundo aleatória (RGB)
-        - Texto branco sobreposto no canto superior esquerdo
-        - Resolução ajustada automaticamente baseada no tamanho alvo
+        - Wordcloud com palavras Lorem Ipsum
+        - Cores vibrantes e aleatórias
+        - Frequências variadas para realismo
+        - Resolução ajustada automaticamente
         - Qualidade JPEG configurável
         
     Exemplo:
-        >>> config = {"resolucao": (800, 600), "linhas_texto": 50}
+        >>> config = {"resolucao": (800, 600), "wordcloud": {"max_palavras": 50}}
         >>> gerar_jpeg("imagem.jpg", config, 0.5)
-        # Gera imagem de ~0.5MB
+        # Gera JPEG com wordcloud de ~0.5MB
     """
     # Carregar configurações específicas do JPEG do config.json
     config_jpeg = CONFIG.get("configuracoes_especificas", {}).get("jpeg", {})
     qualidade = config_jpeg.get("qualidade", 85)
     formato_cor = config_jpeg.get("formato_cor", "RGB")
+    config_wordcloud = config_jpeg.get("wordcloud", {})
     
     resolucao = config["resolucao"]
     if tamanho_mb_alvo:
         resolucao = ajustar_conteudo_para_tamanho("jpeg", tamanho_mb_alvo, config)
     
-    # Criar imagem com cor de fundo aleatória
-    cor_fundo = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
-    img = Image.new(formato_cor, resolucao, color=cor_fundo)
-    draw = ImageDraw.Draw(img)
+    # Gerar wordcloud Lorem Ipsum
+    img = gerar_wordcloud_lorem(config_wordcloud, resolucao)
     
-    # Adicionar texto sobreposto
-    texto = texto_aleatorio(config["linhas_texto"])
-    draw.text((10, 10), texto, fill=(255,255,255))
+    # Converter para RGB se necessário (JPEG não suporta transparência)
+    if img.mode != "RGB":
+        # Criar fundo branco para transparência
+        fundo = Image.new("RGB", img.size, (255, 255, 255))
+        if img.mode == "RGBA":
+            fundo.paste(img, mask=img.split()[-1])  # Usar canal alpha como máscara
+        else:
+            fundo.paste(img)
+        img = fundo
     
     # Salvar com qualidade configurável
     img.save(nome, "JPEG", quality=qualidade)
 
 def gerar_png(nome, config, tamanho_mb_alvo=None):
     """
-    Gera um arquivo PNG com imagem colorida, texto sobreposto e transparência.
+    Gera um arquivo PNG com wordcloud Lorem Ipsum e transparência.
     
-    Esta função cria uma imagem PNG com cor de fundo aleatória, texto sobreposto
-    e suporte a transparência. A resolução é ajustada automaticamente baseada no
-    tamanho alvo em MB, garantindo que o arquivo tenha aproximadamente o tamanho desejado.
+    Esta função cria uma imagem PNG com um wordcloud colorido e dinâmico
+    usando palavras do Lorem Ipsum, com suporte a transparência. A resolução
+    é ajustada automaticamente baseada no tamanho alvo em MB.
     
     Args:
         nome (str): Caminho completo onde salvar o arquivo PNG
         config (dict): Configurações específicas para PNG
             - resolucao: Tupla (largura, altura) da imagem
-            - linhas_texto: Número de caracteres do texto sobreposto
+            - wordcloud: Configurações do wordcloud
             - incluir_transparencia: Se deve incluir transparência
         tamanho_mb_alvo (float, optional): Tamanho alvo em MB para ajustar resolução
         
     Características:
-        - Cor de fundo aleatória (RGBA)
-        - Texto branco sobreposto no canto superior esquerdo
+        - Wordcloud com palavras Lorem Ipsum
+        - Cores vibrantes e aleatórias
         - Suporte a transparência (canal alpha)
-        - Resolução ajustada automaticamente baseada no tamanho alvo
+        - Frequências variadas para realismo
+        - Resolução ajustada automaticamente
         - Compressão PNG configurável
         
     Exemplo:
-        >>> config = {"resolucao": (1024, 768), "linhas_texto": 60}
+        >>> config = {"resolucao": (1024, 768), "wordcloud": {"max_palavras": 60}}
         >>> gerar_png("imagem.png", config, 0.6)
-        # Gera PNG de ~0.6MB
+        # Gera PNG com wordcloud de ~0.6MB
     """
     # Carregar configurações específicas do PNG do config.json
     config_png = CONFIG.get("configuracoes_especificas", {}).get("png", {})
     formato_cor = config_png.get("formato_cor", "RGBA")
     incluir_transparencia = config_png.get("incluir_transparencia", True)
     compressao = config_png.get("compressao", 6)
+    config_wordcloud = config_png.get("wordcloud", {})
     
     resolucao = config["resolucao"]
     if tamanho_mb_alvo:
         resolucao = ajustar_conteudo_para_tamanho("png", tamanho_mb_alvo, config)
     
-    # Criar imagem com cor de fundo aleatória e transparência
-    if incluir_transparencia:
-        # Cor com transparência (RGBA)
-        cor_fundo = (
-            random.randint(0, 255), 
-            random.randint(0, 255), 
-            random.randint(0, 255), 
-            random.randint(200, 255)  # Alpha entre 200-255 (pouco transparente)
-        )
-    else:
-        # Cor sólida (RGB)
-        cor_fundo = (
-            random.randint(0, 255), 
-            random.randint(0, 255), 
-            random.randint(0, 255), 
-            255  # Alpha opaco
-        )
+    # Gerar wordcloud Lorem Ipsum
+    img = gerar_wordcloud_lorem(config_wordcloud, resolucao)
     
-    img = Image.new(formato_cor, resolucao, color=cor_fundo)
-    draw = ImageDraw.Draw(img)
-    
-    # Adicionar texto sobreposto
-    texto = texto_aleatorio(config["linhas_texto"])
-    draw.text((10, 10), texto, fill=(255, 255, 255, 255))  # Texto branco opaco
-    
-    # Adicionar elementos visuais extras para PNG
-    # Desenhar algumas formas geométricas
-    for i in range(3):
-        x1 = random.randint(50, resolucao[0] - 100)
-        y1 = random.randint(50, resolucao[1] - 100)
-        x2 = x1 + random.randint(20, 80)
-        y2 = y1 + random.randint(20, 80)
-        
-        cor_forma = (
-            random.randint(0, 255),
-            random.randint(0, 255), 
-            random.randint(0, 255),
-            random.randint(100, 200)  # Semi-transparente
-        )
-        
-        if i % 2 == 0:
-            draw.rectangle([x1, y1, x2, y2], fill=cor_forma)
+    # Ajustar transparência se necessário
+    if incluir_transparencia and img.mode != "RGBA":
+        # Converter para RGBA se não for transparente
+        if img.mode == "RGB":
+            img = img.convert("RGBA")
         else:
-            draw.ellipse([x1, y1, x2, y2], fill=cor_forma)
+            img = img.convert("RGBA")
+    elif not incluir_transparencia and img.mode == "RGBA":
+        # Converter para RGB se não deve ter transparência
+        fundo = Image.new("RGB", img.size, (255, 255, 255))
+        fundo.paste(img, mask=img.split()[-1])
+        img = fundo
     
     # Salvar com compressão configurável
     img.save(nome, "PNG", compress_level=compressao)

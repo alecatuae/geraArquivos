@@ -1,6 +1,6 @@
 # GeraArquivos - Gerador de Arquivos de Teste
 
-Sistema parametrizável para geração de arquivos de teste em diferentes formatos (JPEG, PNG, PDF, DOCX, XLSX, TXT).
+Sistema parametrizável para geração de arquivos de teste em diferentes formatos (JPEG, PNG, PDF, DOCX, XLSX, TXT) com wordclouds Lorem Ipsum.
 
 ## 📁 Estrutura do Projeto
 
@@ -255,6 +255,8 @@ gerar_arquivos_por_template(30, "foco_dados", diretorio_destino="meus_arquivos")
 - openpyxl
 - faker
 - lorem-text
+- wordcloud
+- matplotlib
 
 ## 📊 Saída
 
@@ -278,3 +280,33 @@ Os arquivos são gerados com nomes únicos baseados em hash SHA-1, garantindo:
 - Exemplo: `a1b2c3d4e5f6789012345678901234567890abcd.txt`
 
 Arquivos são salvos na pasta `arquivos_teste/` por padrão (configurável via config.json).
+
+### 🎨 Wordclouds Lorem Ipsum
+
+Os arquivos JPEG e PNG agora são gerados como **wordclouds coloridos** com palavras do Lorem Ipsum:
+
+#### ✨ **Características dos Wordclouds:**
+- **Palavras Lorem Ipsum**: Texto clássico em latim
+- **Frequências Variadas**: Palavras com tamanhos diferentes baseados na frequência
+- **Cores Vibrantes**: Mapas de cores aleatórios (viridis, plasma, inferno, etc.)
+- **Layout Dinâmico**: Orientação otimizada para legibilidade
+- **Configurável**: Tamanhos, cores e palavras personalizáveis
+
+#### 🎯 **Configurações de Wordcloud:**
+```json
+"wordcloud": {
+  "max_palavras": 100,
+  "largura": 800,
+  "altura": 600,
+  "background_color": "white",
+  "colormap": "viridis",
+  "max_font_size": 100,
+  "min_font_size": 10,
+  "relative_scaling": 0.5,
+  "prefer_horizontal": 0.9
+}
+```
+
+#### 🖼️ **Diferenças JPEG vs PNG:**
+- **JPEG**: Fundo sólido, cores vibrantes, ideal para fotos
+- **PNG**: Suporte a transparência, cores mais suaves, ideal para gráficos

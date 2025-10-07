@@ -25,18 +25,38 @@
   
   "configuracoes_especificas": {
     "jpeg": {
-      "linhas_texto": 50,
       "resolucao": [800, 600],
       "qualidade": 85,
-      "formato_cor": "RGB"
+      "formato_cor": "RGB",
+      "wordcloud": {
+        "max_palavras": 100,
+        "largura": 800,
+        "altura": 600,
+        "background_color": "white",
+        "colormap": "viridis",
+        "max_font_size": 100,
+        "min_font_size": 10,
+        "relative_scaling": 0.5,
+        "prefer_horizontal": 0.9
+      }
     },
     
     "png": {
-      "linhas_texto": 60,
       "resolucao": [1024, 768],
       "formato_cor": "RGBA",
       "incluir_transparencia": true,
-      "compressao": 6
+      "compressao": 6,
+      "wordcloud": {
+        "max_palavras": 120,
+        "largura": 1024,
+        "altura": 768,
+        "background_color": "white",
+        "colormap": "plasma",
+        "max_font_size": 120,
+        "min_font_size": 12,
+        "relative_scaling": 0.6,
+        "prefer_horizontal": 0.8
+      }
     },
     
     "pdf": {
@@ -98,6 +118,25 @@
     "tamanho_observacoes": 100
   },
   
+  "configuracoes_wordcloud": {
+    "palavras_lorem": [
+      "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",
+      "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore",
+      "magna", "aliqua", "enim", "ad", "minim", "veniam", "quis", "nostrud",
+      "exercitation", "ullamco", "laboris", "nisi", "aliquip", "ex", "ea", "commodo",
+      "consequat", "duis", "aute", "irure", "in", "reprehenderit", "voluptate",
+      "velit", "esse", "cillum", "fugiat", "nulla", "pariatur", "excepteur", "sint",
+      "occaecat", "cupidatat", "non", "proident", "sunt", "culpa", "qui", "officia",
+      "deserunt", "mollit", "anim", "id", "est", "laborum"
+    ],
+    "frequencias_padrao": {
+      "lorem": 10, "ipsum": 8, "dolor": 6, "sit": 5, "amet": 4, "consectetur": 3,
+      "adipiscing": 3, "elit": 2, "sed": 2, "do": 2, "eiusmod": 1, "tempor": 1
+    },
+    "cores_disponiveis": ["viridis", "plasma", "inferno", "magma", "coolwarm", "hot", "spring", "summer", "autumn", "winter"],
+    "fontes_disponiveis": ["Arial", "Times", "Courier", "Helvetica", "Georgia", "Verdana"]
+  },
+  
   "configuracoes_controle_tamanho": {
     "jpeg": {
       "0.1": [400, 300],
@@ -126,12 +165,12 @@
   
   "percentuais_padrao": {
     "equilibrado": {
-      "jpeg": 16,
+      "jpeg": 7,
       "png": 16,
-      "pdf": 17,
-      "docx": 17,
-      "xlsx": 17,
-      "txt": 17
+      "pdf": 61,
+      "docx": 2,
+      "xlsx": 7,
+      "txt": 7
     },
     "foco_documentos": {
       "pdf": 40,
