@@ -118,8 +118,4 @@ python -c "from geraArquivos import gerar; gerar(50, 'equilibrado', 'meus_arquiv
 2. **📖 [howto.md](howto.md)** - Exemplos práticos e comandos
 3. **🧪 Teste básico** - Comece com `gerar(5)`
 4. **🎯 Explore templates** - Teste diferentes distribuições
-5. **🔄 [GERADOR_INFINITO.md](GERADOR_INFINITO.md)** - Para testes de storage avançados
-
----
-
-**🎉 Pronto para gerar arquivos de teste!**
+5. **🔄 [GERADOR_INFINITO.md](GERADOR_INFINITO.md)** - Para testes de storage
