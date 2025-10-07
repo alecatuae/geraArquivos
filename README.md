@@ -61,16 +61,140 @@ config = ConfiguracaoArquivos(
 gerar_arquivos(config)
 ```
 
-## ⚙️ Parâmetros de Configuração
+## ⚙️ Sistema de Configuração
+
+### 📄 Arquivo config.json
+
+O sistema agora utiliza um arquivo `config.json` centralizado para todas as configurações, permitindo personalização completa sem modificar o código.
+
+#### Estrutura do config.json:
+
+```json
+{
+  "configuracao_global": {
+    "diretorio_padrao": "arquivos_teste",
+    "locale_faker": "pt_BR",
+    "encoding_padrao": "utf-8"
+  },
+  "tipos_arquivo_padrao": ["jpeg", "pdf", "docx", "xlsx", "txt"],
+  "tamanhos_mb_padrao": {
+    "jpeg": 0.5, "pdf": 1.0, "docx": 0.8, "xlsx": 0.3, "txt": 0.1
+  },
+  "configuracoes_especificas": {
+    "jpeg": {"linhas_texto": 50, "resolucao": [800, 600], "qualidade": 85},
+    "pdf": {"linhas": 5, "caracteres_por_linha": 80, "margem_esquerda": 100},
+    "docx": {"paragrafos": 5, "caracteres_por_paragrafo": 120},
+    "xlsx": {"linhas": 20, "colunas": 15, "ajustar_largura_colunas": true},
+    "txt": {"linhas": 10, "caracteres_por_linha": 80, "incluir_cabecalho": true}
+  }
+}
+```
 
 ### ConfiguracaoArquivos
 
 | Parâmetro | Tipo | Descrição | Padrão |
 |-----------|------|-----------|---------|
-| `tipos_ativados` | List[str] | Tipos de arquivo a gerar | `["jpeg", "pdf", "docx", "xlsx", "txt"]` |
+| `tipos_ativados` | List[str] | Tipos de arquivo a gerar | Carregado do config.json |
 | `quantidade_por_tipo` | Dict[str, int] | Quantidade específica por tipo | `{}` |
-| `tamanho_mb` | Dict[str, float] | Tamanho alvo em MB por tipo | Ver valores padrão abaixo |
-| `config_especifica` | Dict[str, Dict] | Configurações específicas por tipo | Ver valores padrão abaixo |
+| `tamanho_mb` | Dict[str, float] | Tamanho alvo em MB por tipo | Carregado do config.json |
+| `config_especifica` | Dict[str, Dict] | Configurações específicas por tipo | Carregado do config.json |
+| `diretorio_destino` | str | Diretório onde salvar arquivos | Carregado do config.json |
+
+### 🎛️ Personalização via config.json
+
+#### Modificando Configurações Globais:
+```json
+{
+  "configuracao_global": {
+    "diretorio_padrao": "meus_arquivos_teste",
+    "locale_faker": "pt_BR",
+    "encoding_padrao": "utf-8"
+  }
+}
+```
+
+#### Ajustando Tamanhos de Arquivo:
+```json
+{
+  "tamanhos_mb_padrao": {
+    "jpeg": 1.0,    // 1MB para imagens
+    "pdf": 2.0,     // 2MB para PDFs
+    "docx": 1.5,    // 1.5MB para documentos
+    "xlsx": 0.5,    // 500KB para planilhas
+    "txt": 0.2      // 200KB para textos
+  }
+}
+```
+
+#### Configurações Específicas por Tipo:
+
+**JPEG:**
+```json
+{
+  "jpeg": {
+    "linhas_texto": 100,        // Caracteres do texto sobreposto
+    "resolucao": [1920, 1080],  // Resolução da imagem
+    "qualidade": 95,            // Qualidade JPEG (1-100)
+    "formato_cor": "RGB"        // Formato de cor
+  }
+}
+```
+
+**PDF:**
+```json
+{
+  "pdf": {
+    "linhas": 10,               // Número de linhas
+    "caracteres_por_linha": 100, // Limite de caracteres por linha
+    "margem_esquerda": 50,       // Margem esquerda em pixels
+    "margem_superior": 800,      // Margem superior em pixels
+    "espacamento_linhas": 15,    // Espaçamento entre linhas
+    "altura_minima_pagina": 100, // Altura mínima antes de nova página
+    "fonte_tamanho": 14          // Tamanho da fonte
+  }
+}
+```
+
+**DOCX:**
+```json
+{
+  "docx": {
+    "paragrafos": 8,                    // Número de parágrafos
+    "caracteres_por_paragrafo": 200,   // Caracteres por parágrafo
+    "incluir_titulo": true,             // Incluir título do documento
+    "incluir_informacoes": true,        // Incluir seção de informações
+    "nivel_titulo": 0                    // Nível do título (0-6)
+  }
+}
+```
+
+**XLSX:**
+```json
+{
+  "xlsx": {
+    "linhas": 50,                    // Número de linhas de dados
+    "colunas": 15,                    // Número de colunas
+    "ajustar_largura_colunas": true,  // Ajustar largura automaticamente
+    "largura_maxima_coluna": 50,      // Largura máxima de coluna
+    "incluir_cabecalho": true,        // Incluir cabeçalho
+    "nome_planilha": "Dados"          // Nome da planilha
+  }
+}
+```
+
+**TXT:**
+```json
+{
+  "txt": {
+    "linhas": 20,                    // Número de linhas
+    "caracteres_por_linha": 100,     // Caracteres por linha
+    "incluir_cabecalho": true,       // Incluir cabeçalho
+    "incluir_rodape": true,          // Incluir rodapé
+    "separador_linha": "=",          // Caractere separador
+    "largura_separador": 80          // Largura do separador
+  }
+}
+```
 
 ### Tamanhos Padrão (MB)
 - **JPEG**: 0.5 MB

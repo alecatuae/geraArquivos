@@ -1,6 +1,7 @@
 import os
 import random
 import string
+import json
 from io import BytesIO
 from PIL import Image, ImageDraw
 from reportlab.pdfgen import canvas
@@ -11,16 +12,59 @@ from typing import Dict, List, Optional
 from faker import Faker
 from lorem_text import lorem
 
-# Pasta onde salvar os arquivos
-OUTPUT_DIR = "arquivos_teste"
+def carregar_configuracao(caminho_config="config.json"):
+    """
+    Carrega as configurações do arquivo JSON
+    
+    Args:
+        caminho_config (str): Caminho para o arquivo de configuração JSON
+        
+    Returns:
+        dict: Dicionário com todas as configurações carregadas
+        
+    Raises:
+        FileNotFoundError: Se o arquivo de configuração não for encontrado
+        json.JSONDecodeError: Se o arquivo JSON estiver malformado
+    """
+    try:
+        with open(caminho_config, 'r', encoding='utf-8') as arquivo:
+            return json.load(arquivo)
+    except FileNotFoundError:
+        print(f"⚠️  Arquivo de configuração {caminho_config} não encontrado. Usando configurações padrão.")
+        return {}
+    except json.JSONDecodeError as e:
+        print(f"❌ Erro ao decodificar JSON: {e}")
+        return {}
+
+# Carregar configurações do arquivo JSON
+CONFIG = carregar_configuracao()
+
+# Pasta onde salvar os arquivos (carregada do config.json ou padrão)
+OUTPUT_DIR = CONFIG.get("configuracao_global", {}).get("diretorio_padrao", "arquivos_teste")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Instância global do Faker para gerar dados realistas
-fake = Faker('pt_BR')  # Português brasileiro
+locale_faker = CONFIG.get("configuracao_global", {}).get("locale_faker", "pt_BR")
+fake = Faker(locale_faker)
 
 @dataclass
 class ConfiguracaoArquivos:
-    """Configuração para geração de arquivos"""
+    """
+    Classe de configuração para geração de arquivos de teste.
+    
+    Esta classe centraliza todas as configurações necessárias para gerar arquivos
+    de diferentes tipos (JPEG, PDF, DOCX, XLSX, TXT) com controle sobre quantidade,
+    tamanho, distribuição e parâmetros específicos por tipo de arquivo.
+    
+    Atributos:
+        tipos_ativados (List[str]): Lista dos tipos de arquivo a serem gerados
+        quantidade_por_tipo (Dict[str, int]): Quantidade específica por tipo
+        quantidade_total (int): Quantidade total de arquivos (ignora quantidade_por_tipo)
+        percentual_por_tipo (Dict[str, float]): Distribuição por percentual
+        tamanho_mb (Dict[str, float]): Tamanho alvo em MB para cada tipo
+        config_especifica (Dict[str, Dict]): Configurações específicas por tipo
+        diretorio_destino (str): Diretório onde salvar os arquivos
+    """
     # Tipos de arquivo ativados
     tipos_ativados: List[str] = None
     
@@ -43,39 +87,114 @@ class ConfiguracaoArquivos:
     diretorio_destino: str = None
     
     def __post_init__(self):
-        if self.tipos_ativados is None:
-            self.tipos_ativados = ["jpeg", "pdf", "docx", "xlsx", "txt"]
+        """
+        Inicializa valores padrão baseados no arquivo config.json.
         
+        Este método é executado automaticamente após a criação da instância
+        e define valores padrão para todos os atributos que não foram especificados.
+        """
+        # Carregar tipos de arquivo padrão do config.json
+        if self.tipos_ativados is None:
+            self.tipos_ativados = CONFIG.get("tipos_arquivo_padrao", ["jpeg", "pdf", "docx", "xlsx", "txt"])
+        
+        # Inicializar dicionário de quantidade por tipo
         if self.quantidade_por_tipo is None:
             self.quantidade_por_tipo = {}
         
+        # Carregar tamanhos padrão do config.json
         if self.tamanho_mb is None:
-            self.tamanho_mb = {
+            self.tamanho_mb = CONFIG.get("tamanhos_mb_padrao", {
                 "jpeg": 0.5,    # 500KB
                 "pdf": 1.0,     # 1MB
                 "docx": 0.8,    # 800KB
                 "xlsx": 0.3,    # 300KB
                 "txt": 0.1      # 100KB
-            }
+            })
         
+        # Carregar configurações específicas do config.json
         if self.config_especifica is None:
-            self.config_especifica = {
+            self.config_especifica = CONFIG.get("configuracoes_especificas", {
                 "jpeg": {"linhas_texto": 50, "resolucao": (800, 600)},
                 "pdf": {"linhas": 5, "caracteres_por_linha": 80},
                 "docx": {"paragrafos": 5, "caracteres_por_paragrafo": 120},
-                "xlsx": {"linhas": 20, "colunas": 15},  # 15 colunas com dados realistas
+                "xlsx": {"linhas": 20, "colunas": 15},
                 "txt": {"linhas": 10, "caracteres_por_linha": 80}
-            }
+            })
 
-# Função para gerar texto aleatório
 def texto_aleatorio(tamanho=100):
+    """
+    Gera uma string aleatória com caracteres alfanuméricos.
+    
+    Esta função é utilizada principalmente para gerar texto sobreposto em imagens JPEG
+    e como conteúdo auxiliar em outros tipos de arquivo quando necessário.
+    
+    Args:
+        tamanho (int): Número de caracteres a serem gerados (padrão: 100)
+        
+    Returns:
+        str: String aleatória contendo letras (maiúsculas e minúsculas) e dígitos
+        
+    Exemplo:
+        >>> texto_aleatorio(10)
+        'aB3kL9mN2p'
+        >>> texto_aleatorio(5)
+        'Xy7Zq'
+    """
     return ''.join(random.choices(string.ascii_letters + string.digits, k=tamanho))
 
-# Funções auxiliares para gerar dados realistas com Faker
 def gerar_dados_realistas_xlsx(num_linhas):
-    """Gera dados realistas para planilha XLSX usando Faker"""
+    """
+    Gera dados realistas para planilhas XLSX usando a biblioteca Faker.
+    
+    Esta função cria um conjunto completo de dados realistas em português brasileiro
+    para simular uma planilha de funcionários ou clientes. Os dados incluem informações
+    pessoais, profissionais e de contato, todos gerados de forma consistente e realista.
+    
+    Args:
+        num_linhas (int): Número de linhas (registros) a serem gerados
+        
+    Returns:
+        Dict[str, List]: Dicionário onde cada chave é o nome da coluna e cada valor
+                        é uma lista com os dados para aquela coluna
+        
+    Colunas Geradas:
+        - ID: Números únicos de 1000-9999
+        - Nome: Nomes completos brasileiros
+        - Email: Endereços de email realistas
+        - Telefone: Números de telefone no formato brasileiro
+        - Endereço: Endereços completos (bairro, cidade, estado)
+        - Cidade: Nomes de cidades brasileiras
+        - Estado: Estados brasileiros
+        - CEP: Códigos postais válidos
+        - Data_Nascimento: Datas de nascimento (18-80 anos)
+        - Profissão: Profissões diversas
+        - Empresa: Nomes de empresas
+        - Salário: Valores salariais (R$ 1.500 - R$ 15.000)
+        - Data_Contrato: Datas de contratação (últimos 5 anos)
+        - Status: Status do funcionário (Ativo, Inativo, Férias, Licença)
+        - Observações: Textos aleatórios de até 100 caracteres
+        
+    Exemplo:
+        >>> dados = gerar_dados_realistas_xlsx(3)
+        >>> print(dados['Nome'][:2])
+        ['João Silva Santos', 'Maria Oliveira Costa']
+        >>> print(dados['Email'][:2])
+        ['joao.silva@email.com', 'maria.oliveira@empresa.com.br']
+    """
+    # Carregar configurações do Faker do config.json
+    config_faker = CONFIG.get("configuracoes_faker", {})
+    id_min = config_faker.get("id_minimo", 1000)
+    id_max = config_faker.get("id_maximo", 9999)
+    idade_min = config_faker.get("idade_minima", 18)
+    idade_max = config_faker.get("idade_maxima", 80)
+    salario_min = config_faker.get("salario_minimo", 1500)
+    salario_max = config_faker.get("salario_maximo", 15000)
+    anos_contrato = config_faker.get("anos_contrato", 5)
+    status_opcoes = config_faker.get("status_funcionario", ["Ativo", "Inativo", "Férias", "Licença"])
+    tamanho_obs = config_faker.get("tamanho_observacoes", 100)
+    
     dados = {
-        "ID": [fake.random_int(min=1000, max=9999) for _ in range(num_linhas)],
+        "ID": [fake.random_int(min=id_min, max=id_max) for _ in range(num_linhas)],
         "Nome": [fake.name() for _ in range(num_linhas)],
         "Email": [fake.email() for _ in range(num_linhas)],
         "Telefone": [fake.phone_number() for _ in range(num_linhas)],
@@ -83,49 +202,72 @@ def gerar_dados_realistas_xlsx(num_linhas):
         "Cidade": [fake.city() for _ in range(num_linhas)],
         "Estado": [fake.state() for _ in range(num_linhas)],
         "CEP": [fake.postcode() for _ in range(num_linhas)],
-        "Data_Nascimento": [fake.date_of_birth(minimum_age=18, maximum_age=80).strftime('%d/%m/%Y') for _ in range(num_linhas)],
+        "Data_Nascimento": [fake.date_of_birth(minimum_age=idade_min, maximum_age=idade_max).strftime('%d/%m/%Y') for _ in range(num_linhas)],
         "Profissão": [fake.job() for _ in range(num_linhas)],
         "Empresa": [fake.company() for _ in range(num_linhas)],
-        "Salário": [fake.random_int(min=1500, max=15000) for _ in range(num_linhas)],
-        "Data_Contrato": [fake.date_between(start_date='-5y', end_date='today').strftime('%d/%m/%Y') for _ in range(num_linhas)],
-        "Status": [fake.random_element(elements=('Ativo', 'Inativo', 'Férias', 'Licença')) for _ in range(num_linhas)],
-        "Observações": [fake.text(max_nb_chars=100) for _ in range(num_linhas)]
+        "Salário": [fake.random_int(min=salario_min, max=salario_max) for _ in range(num_linhas)],
+        "Data_Contrato": [fake.date_between(start_date=f'-{anos_contrato}y', end_date='today').strftime('%d/%m/%Y') for _ in range(num_linhas)],
+        "Status": [fake.random_element(elements=status_opcoes) for _ in range(num_linhas)],
+        "Observações": [fake.text(max_nb_chars=tamanho_obs) for _ in range(num_linhas)]
     }
     return dados
 
-# Funções auxiliares para gerar textos longos com Lorem Ipsum
 def gerar_texto_lorem_ipsum(tamanho_mb_alvo, tipo_arquivo="txt"):
     """
-    Gera texto Lorem Ipsum baseado no tamanho alvo em MB
+    Gera texto Lorem Ipsum baseado no tamanho alvo em MB.
+    
+    Esta função utiliza a biblioteca lorem-text para gerar texto Lorem Ipsum
+    clássico, ajustando automaticamente a quantidade de texto baseada no tamanho
+    desejado em MB. Considera o overhead de formatação de diferentes tipos de arquivo.
     
     Args:
-        tamanho_mb_alvo: Tamanho alvo em MB
-        tipo_arquivo: Tipo do arquivo (txt, pdf, docx)
-    
+        tamanho_mb_alvo (float): Tamanho alvo em MB para o arquivo
+        tipo_arquivo (str): Tipo do arquivo ("txt", "pdf", "docx") para ajustar overhead
+        
     Returns:
-        Lista de strings com o texto gerado
+        List[str]: Lista de strings contendo parágrafos de Lorem Ipsum
+        
+    Comportamento por Tipo de Arquivo:
+        - TXT: 1 caractere ≈ 1 byte (controle preciso)
+        - PDF: Redução de 30% devido ao overhead de formatação
+        - DOCX: Redução de 50% devido ao overhead de XML
+        
+    Exemplo:
+        >>> textos = gerar_texto_lorem_ipsum(0.1, "txt")
+        >>> print(len(textos))
+        3
+        >>> print(textos[0][:50])
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit...
     """
+    # Carregar configurações do Lorem Ipsum do config.json
+    config_lorem = CONFIG.get("configuracoes_lorem_ipsum", {})
+    tamanho_min = config_lorem.get("tamanho_paragrafo_minimo", 50)
+    tamanho_max = config_lorem.get("tamanho_paragrafo_maximo", 200)
+    reducao_pdf = config_lorem.get("reducao_pdf", 0.7)
+    reducao_docx = config_lorem.get("reducao_docx", 0.5)
+    caracteres_min = config_lorem.get("caracteres_minimos", 1000)
+    
     # Calcular quantidade de caracteres necessários baseado no tamanho
     # Assumindo ~1 caractere = 1 byte para texto simples
     caracteres_necessarios = int(tamanho_mb_alvo * 1024 * 1024)
     
     # Ajustar baseado no tipo de arquivo
     if tipo_arquivo == "pdf":
-        # PDF tem overhead de formatação, reduzir em 30%
-        caracteres_necessarios = int(caracteres_necessarios * 0.7)
+        # PDF tem overhead de formatação, reduzir conforme configurado
+        caracteres_necessarios = int(caracteres_necessarios * reducao_pdf)
     elif tipo_arquivo == "docx":
-        # DOCX tem overhead de XML, reduzir em 50%
-        caracteres_necessarios = int(caracteres_necessarios * 0.5)
+        # DOCX tem overhead de XML, reduzir conforme configurado
+        caracteres_necessarios = int(caracteres_necessarios * reducao_docx)
     
     # Garantir mínimo de caracteres
-    caracteres_necessarios = max(caracteres_necessarios, 1000)
+    caracteres_necessarios = max(caracteres_necessarios, caracteres_min)
     
     textos = []
     caracteres_gerados = 0
     
     while caracteres_gerados < caracteres_necessarios:
         # Gerar parágrafo com tamanho variável
-        tamanho_paragrafo = random.randint(50, 200)  # palavras por parágrafo
+        tamanho_paragrafo = random.randint(tamanho_min, tamanho_max)
         paragrafo = lorem.paragraph()
         
         # Se o parágrafo for muito pequeno, gerar mais texto
@@ -135,7 +277,7 @@ def gerar_texto_lorem_ipsum(tamanho_mb_alvo, tipo_arquivo="txt"):
         textos.append(paragrafo)
         caracteres_gerados += len(paragrafo)
         
-        # Adicionar quebra de linha
+        # Adicionar quebra de linha para TXT
         if tipo_arquivo == "txt":
             caracteres_gerados += 1  # \n
     
@@ -143,15 +285,37 @@ def gerar_texto_lorem_ipsum(tamanho_mb_alvo, tipo_arquivo="txt"):
 
 def gerar_texto_lorem_por_linhas(num_linhas, caracteres_por_linha=80):
     """
-    Gera texto Lorem Ipsum com número específico de linhas
+    Gera texto Lorem Ipsum com número específico de linhas.
+    
+    Esta função gera texto Lorem Ipsum organizado em linhas, onde cada linha
+    tem um tamanho controlado. É útil para gerar arquivos TXT com estrutura
+    específica ou quando se deseja controle preciso sobre o número de linhas.
     
     Args:
-        num_linhas: Número de linhas a gerar
-        caracteres_por_linha: Caracteres por linha
-    
+        num_linhas (int): Número de linhas a serem geradas
+        caracteres_por_linha (int): Número máximo de caracteres por linha (padrão: 80)
+        
     Returns:
-        Lista de strings com as linhas geradas
+        List[str]: Lista de strings, cada uma representando uma linha de texto
+        
+    Características:
+        - Cada linha tem tamanho variável (50% a 100% do tamanho máximo)
+        - Quebra inteligente de palavras para não cortar no meio
+        - Numeração automática para linhas curtas (≤100 caracteres)
+        - Texto Lorem Ipsum clássico e profissional
+        
+    Exemplo:
+        >>> linhas = gerar_texto_lorem_por_linhas(3, 50)
+        >>> print(linhas[0])
+        Linha 1: Lorem ipsum dolor sit amet consectetur adipiscing
+        >>> print(len(linhas))
+        3
     """
+    # Carregar configurações do Lorem Ipsum do config.json
+    config_lorem = CONFIG.get("configuracoes_lorem_ipsum", {})
+    tamanho_linha_min = config_lorem.get("tamanho_linha_minimo", 50)
+    tamanho_linha_max = config_lorem.get("tamanho_linha_maximo", 200)
+    
     linhas = []
     
     for i in range(num_linhas):
@@ -167,7 +331,7 @@ def gerar_texto_lorem_por_linhas(num_linhas, caracteres_por_linha=80):
             else:
                 break
         
-        # Adicionar número da linha se for TXT
+        # Adicionar número da linha se for TXT (linhas curtas)
         if caracteres_por_linha <= 100:  # Assumindo que é TXT
             linha = f"Linha {i+1}: {linha.strip()}"
         
@@ -175,9 +339,29 @@ def gerar_texto_lorem_por_linhas(num_linhas, caracteres_por_linha=80):
     
     return linhas
 
-# Funções auxiliares para controle de tamanho
 def calcular_tamanho_arquivo(caminho_arquivo):
-    """Calcula o tamanho do arquivo em MB"""
+    """
+    Calcula o tamanho de um arquivo em MB.
+    
+    Esta função utilitária é usada para verificar o tamanho real dos arquivos
+    gerados e comparar com o tamanho alvo configurado. É útil para validação
+    e feedback durante o processo de geração.
+    
+    Args:
+        caminho_arquivo (str): Caminho completo para o arquivo
+        
+    Returns:
+        float: Tamanho do arquivo em MB (com precisão de 2 casas decimais)
+        
+    Raises:
+        FileNotFoundError: Se o arquivo não existir
+        OSError: Se houver erro ao acessar o arquivo
+        
+    Exemplo:
+        >>> tamanho = calcular_tamanho_arquivo("arquivo.txt")
+        >>> print(f"Tamanho: {tamanho:.2f} MB")
+        Tamanho: 0.15 MB
+    """
     return os.path.getsize(caminho_arquivo) / (1024 * 1024)
 
 # Funções auxiliares para distribuição por percentual
@@ -279,19 +463,89 @@ def ajustar_conteudo_para_tamanho(tipo_arquivo, tamanho_mb_alvo, config):
     
     return config
 
-# Gerar JPEG
 def gerar_jpeg(nome, config, tamanho_mb_alvo=None):
+    """
+    Gera um arquivo JPEG com imagem colorida e texto sobreposto.
+    
+    Esta função cria uma imagem JPEG com cor de fundo aleatória e texto
+    sobreposto. A resolução é ajustada automaticamente baseada no tamanho
+    alvo em MB, garantindo que o arquivo tenha aproximadamente o tamanho desejado.
+    
+    Args:
+        nome (str): Caminho completo onde salvar o arquivo JPEG
+        config (dict): Configurações específicas para JPEG
+            - resolucao: Tupla (largura, altura) da imagem
+            - linhas_texto: Número de caracteres do texto sobreposto
+        tamanho_mb_alvo (float, optional): Tamanho alvo em MB para ajustar resolução
+        
+    Características:
+        - Cor de fundo aleatória (RGB)
+        - Texto branco sobreposto no canto superior esquerdo
+        - Resolução ajustada automaticamente baseada no tamanho alvo
+        - Qualidade JPEG configurável
+        
+    Exemplo:
+        >>> config = {"resolucao": (800, 600), "linhas_texto": 50}
+        >>> gerar_jpeg("imagem.jpg", config, 0.5)
+        # Gera imagem de ~0.5MB
+    """
+    # Carregar configurações específicas do JPEG do config.json
+    config_jpeg = CONFIG.get("configuracoes_especificas", {}).get("jpeg", {})
+    qualidade = config_jpeg.get("qualidade", 85)
+    formato_cor = config_jpeg.get("formato_cor", "RGB")
+    
     resolucao = config["resolucao"]
     if tamanho_mb_alvo:
         resolucao = ajustar_conteudo_para_tamanho("jpeg", tamanho_mb_alvo, config)
     
-    img = Image.new("RGB", resolucao, color=(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
+    # Criar imagem com cor de fundo aleatória
+    cor_fundo = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+    img = Image.new(formato_cor, resolucao, color=cor_fundo)
     draw = ImageDraw.Draw(img)
-    draw.text((10, 10), texto_aleatorio(config["linhas_texto"]), fill=(255,255,255))
-    img.save(nome, "JPEG")
+    
+    # Adicionar texto sobreposto
+    texto = texto_aleatorio(config["linhas_texto"])
+    draw.text((10, 10), texto, fill=(255,255,255))
+    
+    # Salvar com qualidade configurável
+    img.save(nome, "JPEG", quality=qualidade)
 
-# Gerar PDF
 def gerar_pdf(nome, config, tamanho_mb_alvo=None):
+    """
+    Gera um arquivo PDF com texto Lorem Ipsum formatado.
+    
+    Esta função cria um documento PDF profissional com texto Lorem Ipsum,
+    incluindo quebra de página automática, formatação adequada e controle
+    de tamanho baseado em MB. O texto é quebrado inteligentemente em linhas
+    respeitando o limite de caracteres configurado.
+    
+    Args:
+        nome (str): Caminho completo onde salvar o arquivo PDF
+        config (dict): Configurações específicas para PDF
+            - linhas: Número de linhas (quando não usando tamanho alvo)
+            - caracteres_por_linha: Limite de caracteres por linha
+        tamanho_mb_alvo (float, optional): Tamanho alvo em MB para ajustar conteúdo
+        
+    Características:
+        - Texto Lorem Ipsum clássico e profissional
+        - Quebra de página automática quando necessário
+        - Quebra de linha inteligente (não corta palavras)
+        - Margens e espaçamento configuráveis
+        - Controle de tamanho baseado em MB
+        
+    Exemplo:
+        >>> config = {"linhas": 10, "caracteres_por_linha": 80}
+        >>> gerar_pdf("documento.pdf", config, 0.5)
+        # Gera PDF de ~0.5MB
+    """
+    # Carregar configurações específicas do PDF do config.json
+    config_pdf = CONFIG.get("configuracoes_especificas", {}).get("pdf", {})
+    margem_esq = config_pdf.get("margem_esquerda", 100)
+    margem_sup = config_pdf.get("margem_superior", 800)
+    espacamento = config_pdf.get("espacamento_linhas", 20)
+    altura_min = config_pdf.get("altura_minima_pagina", 50)
+    fonte_tam = config_pdf.get("fonte_tamanho", 12)
+    
     if tamanho_mb_alvo:
         # Usar Lorem Ipsum baseado no tamanho
         textos = gerar_texto_lorem_ipsum(tamanho_mb_alvo, "pdf")
@@ -301,7 +555,7 @@ def gerar_pdf(nome, config, tamanho_mb_alvo=None):
         textos = gerar_texto_lorem_por_linhas(linhas, config["caracteres_por_linha"])
     
     c = canvas.Canvas(nome)
-    y_pos = 800
+    y_pos = margem_sup
     
     for texto in textos:
         # Quebrar texto em linhas se necessário
@@ -309,24 +563,24 @@ def gerar_pdf(nome, config, tamanho_mb_alvo=None):
         linha_atual = ""
         
         for palavra in palavras:
-            if len(linha_atual + " " + palavra) <= 80:  # Limite de caracteres por linha
+            if len(linha_atual + " " + palavra) <= config["caracteres_por_linha"]:
                 linha_atual += " " + palavra if linha_atual else palavra
             else:
                 if linha_atual:
-                    c.drawString(100, y_pos, linha_atual)
-                    y_pos -= 20
-                    if y_pos < 50:  # Nova página se necessário
+                    c.drawString(margem_esq, y_pos, linha_atual)
+                    y_pos -= espacamento
+                    if y_pos < altura_min:  # Nova página se necessário
                         c.showPage()
-                        y_pos = 800
+                        y_pos = margem_sup
                 linha_atual = palavra
         
         # Desenhar última linha
         if linha_atual:
-            c.drawString(100, y_pos, linha_atual)
-            y_pos -= 20
-            if y_pos < 50:
+            c.drawString(margem_esq, y_pos, linha_atual)
+            y_pos -= espacamento
+            if y_pos < altura_min:
                 c.showPage()
-                y_pos = 800
+                y_pos = margem_sup
     
     c.save()
 
@@ -422,14 +676,47 @@ def gerar_txt(nome, config, tamanho_mb_alvo=None):
         arquivo.write(f"Total de parágrafos: {len(textos)}\n")
         arquivo.write("=" * 80 + "\n")
 
-# Função principal
 def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
     """
-    Gera arquivos baseado na configuração fornecida
+    Função principal para geração de arquivos de teste.
+    
+    Esta é a função central do sistema que coordena a geração de todos os tipos
+    de arquivo (JPEG, PDF, DOCX, XLSX, TXT) baseada na configuração fornecida.
+    Suporta múltiplos modos de operação: quantidade específica por tipo,
+    distribuição aleatória, distribuição por percentual e controle de tamanho.
     
     Args:
-        config: ConfiguracaoArquivos com parâmetros de geração
-        qtd_total: Quantidade total de arquivos (ignora quantidade_por_tipo se especificado)
+        config (ConfiguracaoArquivos, optional): Configuração completa para geração.
+            Se None, usa configurações padrão do config.json
+        qtd_total (int, optional): Quantidade total de arquivos (ignora quantidade_por_tipo)
+        
+    Modos de Operação:
+        1. **Quantidade por Tipo**: Especifica exatamente quantos arquivos de cada tipo
+        2. **Quantidade Total**: Gera quantidade total distribuída aleatoriamente
+        3. **Distribuição por Percentual**: Controla percentual de cada tipo
+        4. **Modo Aleatório**: Distribui arquivos aleatoriamente entre tipos ativados
+        
+    Características:
+        - Criação automática de diretórios
+        - Controle de tamanho por tipo de arquivo
+        - Geração de dados realistas (Faker + Lorem Ipsum)
+        - Feedback detalhado do progresso
+        - Tratamento de erros robusto
+        
+    Exemplo:
+        >>> # Configuração básica
+        >>> config = ConfiguracaoArquivos(
+        ...     tipos_ativados=["txt", "pdf"],
+        ...     quantidade_por_tipo={"txt": 3, "pdf": 2}
+        ... )
+        >>> gerar_arquivos(config)
+        
+        >>> # Modo aleatório
+        >>> gerar_arquivos(qtd_total=10)
+        
+        >>> # Com diretório personalizado
+        >>> config.diretorio_destino = "meus_arquivos"
+        >>> gerar_arquivos(config)
     """
     if config is None:
         config = ConfiguracaoArquivos()

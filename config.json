@@ -1,0 +1,123 @@
+{
+  "configuracao_global": {
+    "diretorio_padrao": "arquivos_teste",
+    "locale_faker": "pt_BR",
+    "encoding_padrao": "utf-8"
+  },
+  
+  "tipos_arquivo_padrao": [
+    "jpeg",
+    "pdf", 
+    "docx",
+    "xlsx",
+    "txt"
+  ],
+  
+  "tamanhos_mb_padrao": {
+    "jpeg": 0.5,
+    "pdf": 1.0,
+    "docx": 0.8,
+    "xlsx": 0.3,
+    "txt": 0.1
+  },
+  
+  "configuracoes_especificas": {
+    "jpeg": {
+      "linhas_texto": 50,
+      "resolucao": [800, 600],
+      "qualidade": 85,
+      "formato_cor": "RGB"
+    },
+    
+    "pdf": {
+      "linhas": 5,
+      "caracteres_por_linha": 80,
+      "margem_esquerda": 100,
+      "margem_superior": 800,
+      "espacamento_linhas": 20,
+      "altura_minima_pagina": 50,
+      "fonte_tamanho": 12
+    },
+    
+    "docx": {
+      "paragrafos": 5,
+      "caracteres_por_paragrafo": 120,
+      "incluir_titulo": true,
+      "incluir_informacoes": true,
+      "nivel_titulo": 0
+    },
+    
+    "xlsx": {
+      "linhas": 20,
+      "colunas": 15,
+      "ajustar_largura_colunas": true,
+      "largura_maxima_coluna": 50,
+      "incluir_cabecalho": true,
+      "nome_planilha": "Dados"
+    },
+    
+    "txt": {
+      "linhas": 10,
+      "caracteres_por_linha": 80,
+      "incluir_cabecalho": true,
+      "incluir_rodape": true,
+      "separador_linha": "=",
+      "largura_separador": 80
+    }
+  },
+  
+  "configuracoes_lorem_ipsum": {
+    "tamanho_paragrafo_minimo": 50,
+    "tamanho_paragrafo_maximo": 200,
+    "tamanho_linha_minimo": 50,
+    "tamanho_linha_maximo": 200,
+    "reducao_pdf": 0.7,
+    "reducao_docx": 0.5,
+    "caracteres_minimos": 1000
+  },
+  
+  "configuracoes_faker": {
+    "id_minimo": 1000,
+    "id_maximo": 9999,
+    "idade_minima": 18,
+    "idade_maxima": 80,
+    "salario_minimo": 1500,
+    "salario_maximo": 15000,
+    "anos_contrato": 5,
+    "status_funcionario": ["Ativo", "Inativo", "Férias", "Licença"],
+    "tamanho_observacoes": 100
+  },
+  
+  "configuracoes_controle_tamanho": {
+    "jpeg": {
+      "0.1": [400, 300],
+      "0.5": [800, 600],
+      "1.0": [1200, 900],
+      "1.5": [1600, 1200]
+    },
+    "xlsx": {
+      "linhas_por_mb": 2000,
+      "linhas_minimas": 10
+    }
+  },
+  
+  "configuracoes_percentual": {
+    "tolerancia_percentual": 0.01,
+    "percentual_minimo": 99.0,
+    "percentual_maximo": 101.0
+  },
+  
+  "configuracoes_arquivo": {
+    "prefixo_nome": "arquivo_",
+    "separador_tipo": ".",
+    "contador_inicial": 1
+  },
+  
+  "configuracoes_saida": {
+    "mostrar_progresso": true,
+    "mostrar_tamanho": true,
+    "mostrar_caminho": true,
+    "formato_tamanho": "MB",
+    "casas_decimais": 2
+  }
+}
