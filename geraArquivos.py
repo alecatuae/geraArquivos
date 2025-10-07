@@ -123,6 +123,41 @@ class ConfiguracaoArquivos:
                 "txt": {"linhas": 10, "caracteres_por_linha": 80}
             })
 
+def obter_percentuais_padrao(template="equilibrado"):
+    """
+    Obtém percentuais padrão do config.json baseado em template.
+    
+    Esta função carrega configurações de percentual pré-definidas do config.json,
+    permitindo usar templates comuns como "equilibrado", "foco_documentos", etc.
+    
+    Args:
+        template (str): Nome do template de percentual (padrão: "equilibrado")
+        
+    Returns:
+        Dict[str, float]: Dicionário com percentuais por tipo de arquivo
+        
+    Templates Disponíveis:
+        - "equilibrado": Distribuição igual entre todos os tipos (20% cada)
+        - "foco_documentos": Foco em PDF (40%), DOCX (30%), TXT (20%), outros (10%)
+        - "foco_dados": Foco em XLSX (50%), TXT (25%), PDF (15%), outros (10%)
+        - "foco_imagens": Foco em JPEG (60%), PDF (20%), outros (20%)
+        - "minimal": Apenas TXT (70%) e PDF (30%)
+        
+    Exemplo:
+        >>> percentuais = obter_percentuais_padrao("foco_documentos")
+        >>> print(percentuais)
+        {'pdf': 40, 'docx': 30, 'txt': 20, 'outros': 10}
+    """
+    percentuais_padrao = CONFIG.get("percentuais_padrao", {})
+    
+    if template not in percentuais_padrao:
+        print(f"⚠️  Template '{template}' não encontrado. Usando 'equilibrado'.")
+        template = "equilibrado"
+    
+    return percentuais_padrao.get(template, {
+        "jpeg": 20, "pdf": 20, "docx": 20, "xlsx": 20, "txt": 20
+    })
+
 def gerar_nome_arquivo_unico(tipo_arquivo):
     """
     Gera um nome único para arquivo usando hash SHA-1.
@@ -885,6 +920,49 @@ def gerar_arquivos_por_percentual(quantidade_total, percentual_por_tipo, tipos_a
     if diretorio_destino:
         config.diretorio_destino = diretorio_destino
     gerar_arquivos(config)
+
+def gerar_arquivos_por_template(quantidade_total, template="equilibrado", tipos_ativados=None, tamanhos_mb=None, diretorio_destino=None):
+    """
+    Gera arquivos usando templates de percentual pré-definidos do config.json
+    
+    Esta função facilita o uso de distribuições comuns sem precisar especificar
+    percentuais manualmente. Usa templates pré-configurados no config.json.
+    
+    Args:
+        quantidade_total (int): Quantidade total de arquivos a gerar
+        template (str): Nome do template de percentual (padrão: "equilibrado")
+        tipos_ativados (List[str], optional): Lista de tipos ativados
+        tamanhos_mb (Dict[str, float], optional): Tamanhos em MB por tipo
+        diretorio_destino (str, optional): Diretório de destino dos arquivos
+        
+    Templates Disponíveis:
+        - "equilibrado": Distribuição igual entre todos os tipos (20% cada)
+        - "foco_documentos": Foco em PDF (40%), DOCX (30%), TXT (20%), outros (10%)
+        - "foco_dados": Foco em XLSX (50%), TXT (25%), PDF (15%), outros (10%)
+        - "foco_imagens": Foco em JPEG (60%), PDF (20%), outros (20%)
+        - "minimal": Apenas TXT (70%) e PDF (30%)
+        
+    Exemplo:
+        >>> # Usar template equilibrado
+        >>> gerar_arquivos_por_template(100, "equilibrado")
+        
+        >>> # Usar template focado em documentos
+        >>> gerar_arquivos_por_template(50, "foco_documentos")
+        
+        >>> # Com diretório personalizado
+        >>> gerar_arquivos_por_template(30, "foco_dados", diretorio_destino="meus_arquivos")
+    """
+    # Obter percentuais do template
+    percentuais = obter_percentuais_padrao(template)
+    
+    # Usar a função existente de percentual
+    gerar_arquivos_por_percentual(
+        quantidade_total=quantidade_total,
+        percentual_por_tipo=percentuais,
+        tipos_ativados=tipos_ativados,
+        tamanhos_mb=tamanhos_mb,
+        diretorio_destino=diretorio_destino
+    )
 
 if __name__ == "__main__":
     # Exemplo de uso com configuração personalizada

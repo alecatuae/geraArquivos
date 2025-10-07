@@ -228,6 +228,24 @@ gerar_arquivos_por_percentual(
 )
 ```
 
+#### Geração por Template (Novo!)
+```python
+# Usar templates pré-definidos do config.json
+gerar_arquivos_por_template(100, "equilibrado")
+gerar_arquivos_por_template(50, "foco_documentos")
+gerar_arquivos_por_template(30, "foco_dados", diretorio_destino="meus_arquivos")
+```
+
+### 🎯 Templates de Percentual Disponíveis
+
+| Template | Descrição | Distribuição |
+|----------|-----------|--------------|
+| `equilibrado` | Distribuição igual entre todos os tipos | 20% cada tipo |
+| `foco_documentos` | Foco em documentos | PDF 40%, DOCX 30%, TXT 20%, outros 10% |
+| `foco_dados` | Foco em planilhas e dados | XLSX 50%, TXT 25%, PDF 15%, outros 10% |
+| `foco_imagens` | Foco em imagens | JPEG 60%, PDF 20%, outros 20% |
+| `minimal` | Apenas texto e PDF | TXT 70%, PDF 30% |
+
 ## 📦 Dependências
 
 - PIL (Pillow)

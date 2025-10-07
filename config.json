@@ -107,6 +107,37 @@
     "percentual_maximo": 101.0
   },
   
+  "percentuais_padrao": {
+    "equilibrado": {
+      "jpeg": 20,
+      "pdf": 20,
+      "docx": 20,
+      "xlsx": 20,
+      "txt": 20
+    },
+    "foco_documentos": {
+      "pdf": 40,
+      "docx": 30,
+      "txt": 20,
+      "outros": 10
+    },
+    "foco_dados": {
+      "xlsx": 50,
+      "txt": 25,
+      "pdf": 15,
+      "outros": 10
+    },
+    "foco_imagens": {
+      "jpeg": 60,
+      "pdf": 20,
+      "outros": 20
+    },
+    "minimal": {
+      "txt": 70,
+      "pdf": 30
+    }
+  },
+  
   "configuracoes_arquivo": {
     "prefixo_nome": "arquivo_",
     "separador_tipo": ".",
