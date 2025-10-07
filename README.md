@@ -4,10 +4,10 @@ Sistema simples para gerar arquivos de teste em diferentes formatos (JPEG, PNG, 
 
 ## 🎯 O que faz?
 
-Cria automaticamente arquivos de teste com:
+Cria automaticamente arquivos de teste com dados gerados aleatoriamente com:
 - **Imagens**: JPEG e PNG com wordclouds coloridos
 - **Documentos**: PDF e DOCX com texto Lorem Ipsum
-- **Planilhas**: XLSX com dados de funcionários
+- **Planilhas**: XLSX com dados fictícios de funcionários
 - **Texto**: TXT com conteúdo estruturado
 
 ## 📚 Documentação
