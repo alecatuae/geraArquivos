@@ -2,6 +2,26 @@
 
 Sistema parametrizável para geração de arquivos de teste em diferentes formatos (JPEG, PDF, DOCX, XLSX, TXT).
 
+## 📁 Estrutura do Projeto
+
+```
+geraArquivos/
+├── geraArquivos.py          # Módulo principal com todas as funções
+├── config.json              # Configurações centralizadas
+├── requirements.txt         # Dependências Python
+├── README.md               # Documentação completa
+├── ativar_ambiente.sh      # Script de ativação (Linux/Mac)
+├── ativar_ambiente.bat     # Script de ativação (Windows)
+├── .gitignore              # Arquivos ignorados pelo Git
+└── venv/                   # Ambiente virtual Python
+```
+
+### Arquivos Essenciais:
+- **`geraArquivos.py`**: Módulo principal com todas as funcionalidades
+- **`config.json`**: Configurações centralizadas e personalizáveis
+- **`requirements.txt`**: Lista de dependências Python
+- **`README.md`**: Documentação completa do sistema
+
 ## 🚀 Funcionalidades
 
 ### ✅ **Controle de Tipos de Arquivo**
@@ -412,9 +432,12 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-#### Passo 3: Executar
-```bash
-python executar.py
+#### Passo 3: Usar o Sistema
+```python
+from geraArquivos import gerar_arquivos_aleatorios
+
+# Gerar 10 arquivos aleatórios
+gerar_arquivos_aleatorios(10)
 ```
 
 ## 🔧 Instalação Inicial (Primeira Vez)
@@ -431,8 +454,8 @@ venv\Scripts\activate     # Windows
 # 3. Instalar dependências
 pip install -r requirements.txt
 
-# 4. Executar
-python executar.py
+# 4. Usar o sistema
+python -c "from geraArquivos import gerar_arquivos_aleatorios; gerar_arquivos_aleatorios(5)"
 ```
 
 ## 📊 Saída
