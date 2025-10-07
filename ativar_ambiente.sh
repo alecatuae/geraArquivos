@@ -36,7 +36,7 @@ pip install -r requirements.txt
 
 # Executar o script principal
 echo "🚀 Executando geraArquivos.py..."
-python executar.py
+python geraArquivos.py
 
 # Desativar ambiente virtual
 echo "🔚 Desativando ambiente virtual..."

@@ -242,10 +242,21 @@ gerar_arquivos_por_percentual(
 
 O sistema exibe informações detalhadas sobre cada arquivo gerado:
 ```
-[OK] Gerado: arquivos_teste/arquivo_1.txt (0.23 MB)
-[OK] Gerado: arquivos_teste/arquivo_2.pdf (0.45 MB)
+[OK] Gerado: arquivos_teste/a1b2c3d4e5f6789012345678901234567890abcd.txt (0.23 MB)
+[OK] Gerado: arquivos_teste/f9e8d7c6b5a4938271605948372615049382716.pdf (0.45 MB)
 
 ✅ Total de arquivos gerados: 2
 ```
+
+### 🔐 Nomes Únicos com SHA-1
+
+Os arquivos são gerados com nomes únicos baseados em hash SHA-1, garantindo:
+- ✅ **Sem conflitos**: Nomes únicos mesmo em execuções simultâneas
+- ✅ **Sem contadores**: Não há necessidade de gerenciar contadores globais
+- ✅ **Identificação única**: Cada arquivo tem um identificador único de 40 caracteres
+- ✅ **Compatibilidade**: Funciona com todos os tipos de arquivo
+
+**Formato dos nomes**: `{hash_sha1}.{extensao}`
+- Exemplo: `a1b2c3d4e5f6789012345678901234567890abcd.txt`
 
 Arquivos são salvos na pasta `arquivos_teste/` por padrão (configurável via config.json).

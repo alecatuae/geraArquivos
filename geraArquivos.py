@@ -2,6 +2,8 @@ import os
 import random
 import string
 import json
+import hashlib
+import time
 from io import BytesIO
 from PIL import Image, ImageDraw
 from reportlab.pdfgen import canvas
@@ -120,6 +122,41 @@ class ConfiguracaoArquivos:
                 "xlsx": {"linhas": 20, "colunas": 15},
                 "txt": {"linhas": 10, "caracteres_por_linha": 80}
             })
+
+def gerar_nome_arquivo_unico(tipo_arquivo):
+    """
+    Gera um nome único para arquivo usando hash SHA-1.
+    
+    Esta função cria nomes de arquivo únicos baseados em timestamp, dados aleatórios
+    e hash SHA-1, garantindo que não haja conflitos de nomes mesmo em execuções
+    simultâneas ou múltiplas gerações.
+    
+    Args:
+        tipo_arquivo (str): Extensão do arquivo (ex: "txt", "pdf", "docx")
+        
+    Returns:
+        str: Nome único do arquivo com extensão
+        
+    Exemplo:
+        >>> gerar_nome_arquivo_unico("txt")
+        'a1b2c3d4e5f6789012345678901234567890abcd.txt'
+        >>> gerar_nome_arquivo_unico("pdf")
+        'f9e8d7c6b5a4938271605948372615049382716.pdf'
+    """
+    # Criar string única baseada em timestamp, dados aleatórios e PID
+    timestamp = str(time.time())
+    random_data = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+    pid = str(os.getpid())
+    
+    # Combinar dados para criar string única
+    unique_string = f"{timestamp}_{random_data}_{pid}"
+    
+    # Gerar hash SHA-1
+    hash_object = hashlib.sha1(unique_string.encode())
+    hash_hex = hash_object.hexdigest()
+    
+    # Retornar nome do arquivo com extensão
+    return f"{hash_hex}.{tipo_arquivo}"
 
 def texto_aleatorio(tamanho=100):
     """
@@ -766,12 +803,13 @@ def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
                 arquivos_para_gerar[tipo] = 1
     
     # Gerar os arquivos
-    contador_global = 1
     total_gerado = 0
     
     for tipo, quantidade in arquivos_para_gerar.items():
         for i in range(quantidade):
-            nome = os.path.join(diretorio_destino, f"arquivo_{contador_global}.{tipo}")
+            # Gerar nome único usando SHA-1
+            nome_arquivo = gerar_nome_arquivo_unico(tipo)
+            nome = os.path.join(diretorio_destino, nome_arquivo)
             tamanho_alvo = config.tamanho_mb.get(tipo, 0.5)
             config_tipo = config.config_especifica.get(tipo, {})
             
@@ -789,7 +827,6 @@ def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
                 
                 tamanho_real = calcular_tamanho_arquivo(nome)
                 print(f"[OK] Gerado: {nome} ({tamanho_real:.2f} MB)")
-                contador_global += 1
                 total_gerado += 1
                 
             except Exception as e:

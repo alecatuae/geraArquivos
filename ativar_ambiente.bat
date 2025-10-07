@@ -39,7 +39,7 @@ pip install -r requirements.txt
 
 REM Executar o script principal
 echo 🚀 Executando geraArquivos.py...
-python executar.py
+python geraArquivos.py
 
 REM Desativar ambiente virtual
 echo 🔚 Desativando ambiente virtual...
