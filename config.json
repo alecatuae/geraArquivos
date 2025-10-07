@@ -7,6 +7,7 @@
   
   "tipos_arquivo_padrao": [
     "jpeg",
+    "png",
     "pdf", 
     "docx",
     "xlsx",
@@ -15,6 +16,7 @@
   
   "tamanhos_mb_padrao": {
     "jpeg": 0.5,
+    "png": 0.6,
     "pdf": 1.0,
     "docx": 0.8,
     "xlsx": 0.3,
@@ -27,6 +29,14 @@
       "resolucao": [800, 600],
       "qualidade": 85,
       "formato_cor": "RGB"
+    },
+    
+    "png": {
+      "linhas_texto": 60,
+      "resolucao": [1024, 768],
+      "formato_cor": "RGBA",
+      "incluir_transparencia": true,
+      "compressao": 6
     },
     
     "pdf": {
@@ -95,6 +105,13 @@
       "1.0": [1200, 900],
       "1.5": [1600, 1200]
     },
+    "png": {
+      "0.1": [400, 300],
+      "0.5": [800, 600],
+      "1.0": [1024, 768],
+      "1.5": [1280, 960],
+      "2.0": [1600, 1200]
+    },
     "xlsx": {
       "linhas_por_mb": 2000,
       "linhas_minimas": 10
@@ -109,11 +126,12 @@
   
   "percentuais_padrao": {
     "equilibrado": {
-      "jpeg": 20,
-      "pdf": 20,
-      "docx": 20,
-      "xlsx": 20,
-      "txt": 20
+      "jpeg": 16,
+      "png": 16,
+      "pdf": 17,
+      "docx": 17,
+      "xlsx": 17,
+      "txt": 17
     },
     "foco_documentos": {
       "pdf": 40,
@@ -128,7 +146,8 @@
       "outros": 10
     },
     "foco_imagens": {
-      "jpeg": 60,
+      "jpeg": 30,
+      "png": 30,
       "pdf": 20,
       "outros": 20
     },

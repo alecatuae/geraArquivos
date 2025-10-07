@@ -1,6 +1,6 @@
 # GeraArquivos - Gerador de Arquivos de Teste
 
-Sistema parametrizável para geração de arquivos de teste em diferentes formatos (JPEG, PDF, DOCX, XLSX, TXT).
+Sistema parametrizável para geração de arquivos de teste em diferentes formatos (JPEG, PNG, PDF, DOCX, XLSX, TXT).
 
 ## 📁 Estrutura do Projeto
 
@@ -240,10 +240,10 @@ gerar_arquivos_por_template(30, "foco_dados", diretorio_destino="meus_arquivos")
 
 | Template | Descrição | Distribuição |
 |----------|-----------|--------------|
-| `equilibrado` | Distribuição igual entre todos os tipos | 20% cada tipo |
+| `equilibrado` | Distribuição igual entre todos os tipos | ~17% cada tipo (6 tipos) |
 | `foco_documentos` | Foco em documentos | PDF 40%, DOCX 30%, TXT 20%, outros 10% |
 | `foco_dados` | Foco em planilhas e dados | XLSX 50%, TXT 25%, PDF 15%, outros 10% |
-| `foco_imagens` | Foco em imagens | JPEG 60%, PDF 20%, outros 20% |
+| `foco_imagens` | Foco em imagens | JPEG 30%, PNG 30%, PDF 20%, outros 20% |
 | `minimal` | Apenas texto e PDF | TXT 70%, PDF 30% |
 
 ## 📦 Dependências

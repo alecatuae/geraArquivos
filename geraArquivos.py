@@ -533,6 +533,19 @@ def ajustar_conteudo_para_tamanho(tipo_arquivo, tamanho_mb_alvo, config):
         else:
             return (1600, 1200)
     
+    elif tipo_arquivo == "png":
+        # Para PNG: ajustar resolução baseada no tamanho (PNG é maior que JPEG)
+        if tamanho_mb_alvo <= 0.1:
+            return (400, 300)
+        elif tamanho_mb_alvo <= 0.5:
+            return (800, 600)
+        elif tamanho_mb_alvo <= 1.0:
+            return (1024, 768)
+        elif tamanho_mb_alvo <= 1.5:
+            return (1280, 960)
+        else:
+            return (1600, 1200)
+    
     return config
 
 def gerar_jpeg(nome, config, tamanho_mb_alvo=None):
@@ -581,6 +594,92 @@ def gerar_jpeg(nome, config, tamanho_mb_alvo=None):
     
     # Salvar com qualidade configurável
     img.save(nome, "JPEG", quality=qualidade)
+
+def gerar_png(nome, config, tamanho_mb_alvo=None):
+    """
+    Gera um arquivo PNG com imagem colorida, texto sobreposto e transparência.
+    
+    Esta função cria uma imagem PNG com cor de fundo aleatória, texto sobreposto
+    e suporte a transparência. A resolução é ajustada automaticamente baseada no
+    tamanho alvo em MB, garantindo que o arquivo tenha aproximadamente o tamanho desejado.
+    
+    Args:
+        nome (str): Caminho completo onde salvar o arquivo PNG
+        config (dict): Configurações específicas para PNG
+            - resolucao: Tupla (largura, altura) da imagem
+            - linhas_texto: Número de caracteres do texto sobreposto
+            - incluir_transparencia: Se deve incluir transparência
+        tamanho_mb_alvo (float, optional): Tamanho alvo em MB para ajustar resolução
+        
+    Características:
+        - Cor de fundo aleatória (RGBA)
+        - Texto branco sobreposto no canto superior esquerdo
+        - Suporte a transparência (canal alpha)
+        - Resolução ajustada automaticamente baseada no tamanho alvo
+        - Compressão PNG configurável
+        
+    Exemplo:
+        >>> config = {"resolucao": (1024, 768), "linhas_texto": 60}
+        >>> gerar_png("imagem.png", config, 0.6)
+        # Gera PNG de ~0.6MB
+    """
+    # Carregar configurações específicas do PNG do config.json
+    config_png = CONFIG.get("configuracoes_especificas", {}).get("png", {})
+    formato_cor = config_png.get("formato_cor", "RGBA")
+    incluir_transparencia = config_png.get("incluir_transparencia", True)
+    compressao = config_png.get("compressao", 6)
+    
+    resolucao = config["resolucao"]
+    if tamanho_mb_alvo:
+        resolucao = ajustar_conteudo_para_tamanho("png", tamanho_mb_alvo, config)
+    
+    # Criar imagem com cor de fundo aleatória e transparência
+    if incluir_transparencia:
+        # Cor com transparência (RGBA)
+        cor_fundo = (
+            random.randint(0, 255), 
+            random.randint(0, 255), 
+            random.randint(0, 255), 
+            random.randint(200, 255)  # Alpha entre 200-255 (pouco transparente)
+        )
+    else:
+        # Cor sólida (RGB)
+        cor_fundo = (
+            random.randint(0, 255), 
+            random.randint(0, 255), 
+            random.randint(0, 255), 
+            255  # Alpha opaco
+        )
+    
+    img = Image.new(formato_cor, resolucao, color=cor_fundo)
+    draw = ImageDraw.Draw(img)
+    
+    # Adicionar texto sobreposto
+    texto = texto_aleatorio(config["linhas_texto"])
+    draw.text((10, 10), texto, fill=(255, 255, 255, 255))  # Texto branco opaco
+    
+    # Adicionar elementos visuais extras para PNG
+    # Desenhar algumas formas geométricas
+    for i in range(3):
+        x1 = random.randint(50, resolucao[0] - 100)
+        y1 = random.randint(50, resolucao[1] - 100)
+        x2 = x1 + random.randint(20, 80)
+        y2 = y1 + random.randint(20, 80)
+        
+        cor_forma = (
+            random.randint(0, 255),
+            random.randint(0, 255), 
+            random.randint(0, 255),
+            random.randint(100, 200)  # Semi-transparente
+        )
+        
+        if i % 2 == 0:
+            draw.rectangle([x1, y1, x2, y2], fill=cor_forma)
+        else:
+            draw.ellipse([x1, y1, x2, y2], fill=cor_forma)
+    
+    # Salvar com compressão configurável
+    img.save(nome, "PNG", compress_level=compressao)
 
 def gerar_pdf(nome, config, tamanho_mb_alvo=None):
     """
@@ -851,6 +950,8 @@ def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
             try:
                 if tipo == "jpeg":
                     gerar_jpeg(nome, config_tipo, tamanho_alvo)
+                elif tipo == "png":
+                    gerar_png(nome, config_tipo, tamanho_alvo)
                 elif tipo == "pdf":
                     gerar_pdf(nome, config_tipo, tamanho_alvo)
                 elif tipo == "docx":
