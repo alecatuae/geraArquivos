@@ -410,6 +410,156 @@ python -c "from geraArquivos import gerar; gerar(30, 'foco_imagens', 'sistema_im
 ✅ Total de arquivos gerados: 30
 ```
 
+## 📦 Geração com Empacotamento TAR (Novo!)
+
+### O que é TAR?
+TAR é um formato de arquivamento que permite empacotar múltiplos arquivos em um único arquivo, com ou sem compressão. Ideal para:
+- Transferir múltiplos arquivos de uma vez
+- Economizar espaço com compressão
+- Organizar arquivos de teste
+
+### Exemplo 1: TAR sem compressão (mais rápido)
+```bash
+# No terminal, execute:
+source venv/bin/activate
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(20)"
+```
+
+**Saída esperada:**
+```
+📊 Distribuição por percentual:
+   JPEG: 1 arquivos (5.0%)
+   PNG: 3 arquivos (15.0%)
+   PDF: 12 arquivos (60.0%)
+   ...
+
+[OK] Gerado: arquivos_teste/a1b2c3d4e5f6789012345678901234567890abcd.jpeg (0.12 MB)
+...
+✅ Total de arquivos gerados: 20
+
+📦 Criando arquivo tar...
+   📁 Diretório: arquivos_teste
+   📄 Arquivo tar: f9e8d7c6b5a4938271605948372615049382716.tar
+   🗜️  Compressão: Nenhuma (default)
+   📊 Arquivos a empacotar: 20
+   ✅ Tamanho original: 15.50 MB
+   ✅ Tamanho do tar: 15.60 MB
+
+✅ Arquivo tar criado com sucesso: f9e8d7c6b5a4938271605948372615049382716.tar
+```
+
+**Resultado:** Arquivo `.tar` com todos os arquivos (nome em hash SHA-1)
+
+### Exemplo 2: TAR com compressão gzip (recomendado)
+```bash
+# No terminal, execute:
+source venv/bin/activate
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(30, compressao='gz')"
+```
+
+**Saída esperada:**
+```
+...
+✅ Total de arquivos gerados: 30
+
+📦 Criando arquivo tar...
+   📄 Arquivo tar: 1234567890abcdef1234567890abcdef12345678.tar.gz
+   🗜️  Compressão: gz
+   📊 Arquivos a empacotar: 30
+   ✅ Tamanho original: 23.40 MB
+   ✅ Tamanho do tar: 11.70 MB
+   ✅ Taxa de compressão: 50.0%
+
+✅ Arquivo tar criado com sucesso: 1234567890abcdef1234567890abcdef12345678.tar.gz
+```
+
+**Resultado:** Arquivo `.tar.gz` comprimido (economiza ~50% de espaço)
+
+### Exemplo 3: TAR com compressão máxima
+```bash
+# No terminal, execute:
+source venv/bin/activate
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(25, compressao='bz2')"
+```
+
+**Saída esperada:**
+```
+...
+📦 Criando arquivo tar...
+   📄 Arquivo tar: abcdef1234567890abcdef1234567890abcdef12.tar.bz2
+   🗜️  Compressão: bz2
+   ✅ Taxa de compressão: 54.0%
+```
+
+**Resultado:** Arquivo `.tar.bz2` com melhor compressão
+
+### Exemplo 4: TAR e remover arquivos originais
+```bash
+# No terminal, execute:
+source venv/bin/activate
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(20, compressao='gz', limpar_originais=True)"
+```
+
+**Saída esperada:**
+```
+...
+✅ Tamanho do tar: 7.80 MB
+   ✅ Taxa de compressão: 49.6%
+   🗑️  Removendo arquivos originais...
+   ✅ Diretório removido: arquivos_teste
+
+✅ Arquivo tar criado com sucesso: ...tar.gz
+```
+
+**Resultado:** Apenas o arquivo `.tar.gz` permanece (arquivos individuais removidos)
+
+### Exemplo 5: TAR com diretório personalizado
+```bash
+# No terminal, execute:
+source venv/bin/activate
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(15, 'foco_imagens', 'minhas_imagens', 'xz')"
+```
+
+**Resultado:** Arquivos gerados em `minhas_imagens/` e empacotados em `.tar.xz`
+
+### 📊 Tipos de Compressão Disponíveis
+
+| Tipo | Extensão | Velocidade | Compressão | Uso Recomendado |
+|------|----------|------------|------------|-----------------|
+| **Nenhum** | `.tar` | ⚡⚡⚡ Muito rápido | ❌ 0% | Transferência local rápida |
+| **gzip (gz)** | `.tar.gz` | ⚡⚡ Rápido | ✅ ~50% | Uso geral (recomendado) |
+| **bzip2 (bz2)** | `.tar.bz2` | ⚡ Médio | ✅✅ ~54% | Arquivos grandes |
+| **xz** | `.tar.xz` | 🐌 Lento | ✅✅✅ ~52% | Armazenamento longo prazo |
+
+### 🎯 Quando Usar TAR?
+
+✅ **Use TAR quando:**
+- Precisa transferir muitos arquivos
+- Quer economizar espaço em disco
+- Precisa fazer backup de arquivos de teste
+- Vai enviar arquivos por email ou upload
+
+❌ **Não use TAR quando:**
+- Precisa acessar arquivos individuais frequentemente
+- Está apenas testando localmente
+- Quer ver os arquivos diretamente no explorador
+
+### 💻 Comandos Práticos Prontos
+
+```bash
+# Gerar 50 arquivos e empacotar sem compressão
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(50)"
+
+# Gerar 30 arquivos e empacotar com gzip (recomendado)
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(30, compressao='gz')"
+
+# Gerar 40 arquivos, empacotar e limpar originais
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(40, compressao='gz', limpar_originais=True)"
+
+# Focar em imagens e empacotar com máxima compressão
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(25, 'foco_imagens', 'imagens', 'bz2')"
+```
+
 ## 💡 Dicas Importantes
 
 1. **Comece Simples:** Use `gerar(10)` para testar primeiro
@@ -417,9 +567,12 @@ python -c "from geraArquivos import gerar; gerar(30, 'foco_imagens', 'sistema_im
 3. **Quantidade Razoável:** Comece com 10-50 arquivos, não milhares
 4. **Verifique o Espaço:** Arquivos grandes ocupam espaço no disco
 5. **Use Templates:** Os templates já vêm com distribuições testadas
+6. **Compressão gzip:** É o melhor equilíbrio entre velocidade e tamanho
+7. **Nomes SHA-1:** Os arquivos tar usam hash SHA-1, igual aos arquivos gerados
 
 ## 🎯 Resumo dos Comandos Essenciais
 
+### Geração Normal (sem TAR)
 ```bash
 # Comando mais simples
 source venv/bin/activate
@@ -440,6 +593,21 @@ python -c "from geraArquivos import gerar; gerar(40, 'foco_documentos', 'documen
 # Apenas texto e PDF
 source venv/bin/activate
 python -c "from geraArquivos import gerar; gerar(15, 'minimal', 'simples')"
+```
+
+### Geração com TAR (Novo!)
+```bash
+# TAR sem compressão
+source venv/bin/activate
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(30)"
+
+# TAR com compressão gzip (recomendado)
+source venv/bin/activate
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(30, compressao='gz')"
+
+# TAR e remover originais
+source venv/bin/activate
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(30, compressao='gz', limpar_originais=True)"
 ```
 
 ## ✅ Checklist de Uso

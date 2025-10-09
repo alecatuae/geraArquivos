@@ -53,11 +53,19 @@ Veja **[howto.md](howto.md)** para exemplos detalhados e comandos prontos para u
 - **`foco_dados`**: 50% planilhas (XLSX)
 - **`minimal`**: Apenas TXT e PDF
 
+### 📦 Empacotamento TAR (Novo!)
+- **Criação automática**: Gera arquivos e empacota em TAR
+- **Múltiplos formatos**: `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`
+- **Compressão configurável**: Sem compressão (default), gzip, bzip2, xz
+- **Nomes SHA-1**: Usa hash SHA-1 como arquivos individuais
+- **Limpeza opcional**: Remove arquivos originais após criar TAR
+
 ### 🔧 Configuração
 - **config.json**: Todas as configurações centralizadas
 - **Nomes únicos**: SHA-1 para evitar conflitos
 - **Tamanhos personalizáveis**: Controle de MB por tipo
 - **Diretórios customizáveis**: Escolha onde salvar
+- **TAR configurável**: Compressão e opções no config.json
 
 ### 🔄 Gerador Infinito (Avançado)
 - **Loop infinito**: Para testes de storage contínuos
@@ -101,6 +109,18 @@ python -c "from geraArquivos import gerar; gerar(30, 'foco_imagens', 'imagens')"
 ```bash
 # Salvar em pasta específica
 python -c "from geraArquivos import gerar; gerar(50, 'equilibrado', 'meus_arquivos')"
+```
+
+### Com Empacotamento TAR (Novo!)
+```bash
+# Gerar e empacotar sem compressão
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(30)"
+
+# Gerar e empacotar com compressão gzip (recomendado)
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(30, compressao='gz')"
+
+# Gerar, empacotar e remover arquivos originais
+python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(30, compressao='gz', limpar_originais=True)"
 ```
 
 ### Gerador Infinito (Avançado)

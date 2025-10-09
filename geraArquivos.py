@@ -4,6 +4,9 @@ import string
 import json
 import hashlib
 import time
+import tarfile
+import shutil
+import datetime
 from io import BytesIO
 from PIL import Image, ImageDraw
 from reportlab.pdfgen import canvas
@@ -69,6 +72,10 @@ class ConfiguracaoArquivos:
         tamanho_mb (Dict[str, float]): Tamanho alvo em MB para cada tipo
         config_especifica (Dict[str, Dict]): Configurações específicas por tipo
         diretorio_destino (str): Diretório onde salvar os arquivos
+        criar_tar (bool): Se deve criar arquivo tar após gerar arquivos
+        tar_compressao (str): Tipo de compressão (None, "gz", "bz2", "xz")
+        tar_nome_arquivo (str): Nome do arquivo tar (None = auto-gerado com hash SHA-1)
+        tar_limpar_originais (bool): Se deve remover arquivos originais após criar tar
     """
     # Tipos de arquivo ativados
     tipos_ativados: List[str] = None
@@ -90,6 +97,12 @@ class ConfiguracaoArquivos:
     
     # Diretório de destino dos arquivos
     diretorio_destino: str = None
+    
+    # Configurações de TAR
+    criar_tar: bool = False
+    tar_compressao: str = None  # None, "gz", "bz2", "xz"
+    tar_nome_arquivo: str = None
+    tar_limpar_originais: bool = False
     
     def __post_init__(self):
         """
@@ -195,6 +208,177 @@ def gerar_nome_arquivo_unico(tipo_arquivo):
     
     # Retornar nome do arquivo com extensão
     return f"{hash_hex}.{tipo_arquivo}"
+
+def gerar_nome_tar_sha1(compressao=None):
+    """
+    Gera um nome único para arquivo tar usando hash SHA-1.
+    
+    Similar à função gerar_nome_arquivo_unico(), esta função cria nomes únicos
+    para arquivos tar usando hash SHA-1, garantindo que não haja conflitos.
+    
+    Args:
+        compressao (str, optional): Tipo de compressão (None, "gz", "bz2", "xz")
+        
+    Returns:
+        str: Nome único do arquivo tar com extensão apropriada
+        
+    Exemplo:
+        >>> gerar_nome_tar_sha1()
+        'a1b2c3d4e5f6789012345678901234567890abcd.tar'
+        >>> gerar_nome_tar_sha1("gz")
+        'f9e8d7c6b5a4938271605948372615049382716.tar.gz'
+    """
+    # Criar string única baseada em timestamp, dados aleatórios e PID
+    timestamp = str(time.time())
+    random_data = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+    pid = str(os.getpid())
+    
+    # Combinar dados para criar string única
+    unique_string = f"{timestamp}_{random_data}_{pid}_tar"
+    
+    # Gerar hash SHA-1
+    hash_object = hashlib.sha1(unique_string.encode())
+    hash_hex = hash_object.hexdigest()
+    
+    # Determinar extensão baseada na compressão
+    if compressao == "gz":
+        extensao = "tar.gz"
+    elif compressao == "bz2":
+        extensao = "tar.bz2"
+    elif compressao == "xz":
+        extensao = "tar.xz"
+    else:
+        extensao = "tar"
+    
+    # Retornar nome do arquivo tar com extensão
+    return f"{hash_hex}.{extensao}"
+
+def criar_arquivo_tar(
+    diretorio_origem,
+    nome_arquivo_tar=None,
+    compressao=None,
+    limpar_arquivos_originais=False
+):
+    """
+    Encapsula arquivos gerados em um arquivo tar.
+    
+    Esta função cria um arquivo tar contendo todos os arquivos do diretório especificado.
+    Suporta múltiplos tipos de compressão e pode opcionalmente remover os arquivos
+    originais após criar o tar. O nome do arquivo tar é gerado automaticamente usando
+    hash SHA-1 se não for especificado.
+    
+    Args:
+        diretorio_origem (str): Diretório contendo os arquivos a serem empacotados
+        nome_arquivo_tar (str, optional): Nome do arquivo tar. Se None, será gerado
+                                         automaticamente usando hash SHA-1
+        compressao (str, optional): Tipo de compressão:
+            - None ou "": sem compressão (.tar) [DEFAULT]
+            - "gz": compressão gzip (.tar.gz)
+            - "bz2": compressão bzip2 (.tar.bz2)
+            - "xz": compressão xz (.tar.xz)
+        limpar_arquivos_originais (bool): Se True, remove o diretório de arquivos
+                                          originais após criar o tar (default: False)
+    
+    Returns:
+        str: Caminho completo do arquivo tar criado
+        
+    Raises:
+        ValueError: Se o diretório não existir, estiver vazio ou compressão inválida
+        
+    Exemplo:
+        >>> criar_arquivo_tar("arquivos_teste")
+        'a1b2c3d4e5f6789012345678901234567890abcd.tar'
+        
+        >>> criar_arquivo_tar("arquivos_teste", compressao="gz")
+        'f9e8d7c6b5a4938271605948372615049382716.tar.gz'
+        
+        >>> criar_arquivo_tar("arquivos_teste", compressao="bz2", limpar_arquivos_originais=True)
+        '1234567890abcdef1234567890abcdef12345678.tar.bz2'
+    """
+    # Validar diretório
+    if not os.path.exists(diretorio_origem):
+        raise ValueError(f"❌ Diretório não encontrado: {diretorio_origem}")
+    
+    if not os.path.isdir(diretorio_origem):
+        raise ValueError(f"❌ Caminho não é um diretório: {diretorio_origem}")
+    
+    # Verificar se há arquivos
+    arquivos = [f for f in os.listdir(diretorio_origem) 
+                if os.path.isfile(os.path.join(diretorio_origem, f))]
+    
+    if not arquivos:
+        raise ValueError(f"❌ Nenhum arquivo encontrado em: {diretorio_origem}")
+    
+    # Determinar modo de compressão
+    modos_validos = {
+        None: "",
+        "": "",
+        "gz": ":gz",
+        "bz2": ":bz2",
+        "xz": ":xz"
+    }
+    
+    if compressao not in modos_validos:
+        raise ValueError(
+            f"❌ Compressão inválida: {compressao}. "
+            f"Use: None, 'gz', 'bz2' ou 'xz'"
+        )
+    
+    modo = f"w{modos_validos[compressao]}"
+    
+    # Determinar nome do arquivo tar
+    if not nome_arquivo_tar:
+        # Gerar nome usando hash SHA-1
+        nome_arquivo_tar = gerar_nome_tar_sha1(compressao)
+    
+    # Caminho completo do arquivo tar (na pasta pai do diretório origem)
+    diretorio_pai = os.path.dirname(os.path.abspath(diretorio_origem))
+    if not diretorio_pai:
+        diretorio_pai = "."
+    caminho_tar = os.path.join(diretorio_pai, nome_arquivo_tar)
+    
+    # Informações sobre o processo
+    print(f"\n📦 Criando arquivo tar...")
+    print(f"   📁 Diretório: {diretorio_origem}")
+    print(f"   📄 Arquivo tar: {nome_arquivo_tar}")
+    print(f"   🗜️  Compressão: {compressao if compressao else 'Nenhuma (default)'}")
+    print(f"   📊 Arquivos a empacotar: {len(arquivos)}")
+    
+    # Criar arquivo tar
+    try:
+        with tarfile.open(caminho_tar, modo) as tar:
+            # Adicionar diretório completo ao tar
+            # arcname garante que o diretório seja a raiz do tar
+            tar.add(diretorio_origem, arcname=os.path.basename(diretorio_origem))
+        
+        # Calcular estatísticas
+        tamanho_tar = os.path.getsize(caminho_tar) / (1024 * 1024)  # MB
+        tamanho_original = sum(
+            os.path.getsize(os.path.join(diretorio_origem, f)) 
+            for f in arquivos
+        ) / (1024 * 1024)  # MB
+        
+        print(f"   ✅ Tamanho original: {tamanho_original:.2f} MB")
+        print(f"   ✅ Tamanho do tar: {tamanho_tar:.2f} MB")
+        
+        if compressao:
+            taxa_compressao = (1 - tamanho_tar / tamanho_original) * 100
+            print(f"   ✅ Taxa de compressão: {taxa_compressao:.1f}%")
+        
+        # Limpar arquivos originais se solicitado
+        if limpar_arquivos_originais:
+            print(f"   🗑️  Removendo arquivos originais...")
+            shutil.rmtree(diretorio_origem)
+            print(f"   ✅ Diretório removido: {diretorio_origem}")
+        
+        return caminho_tar
+        
+    except Exception as e:
+        print(f"❌ Erro ao criar arquivo tar: {e}")
+        # Se houve erro e o arquivo foi parcialmente criado, remover
+        if os.path.exists(caminho_tar):
+            os.remove(caminho_tar)
+        raise
 
 def texto_aleatorio(tamanho=100):
     """
@@ -1050,6 +1234,19 @@ def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
                 print(f"[ERRO] Falha ao gerar {nome}: {e}")
     
     print(f"\n✅ Total de arquivos gerados: {total_gerado}")
+    
+    # Criar arquivo tar se configurado
+    if config.criar_tar and total_gerado > 0:
+        try:
+            arquivo_tar = criar_arquivo_tar(
+                diretorio_origem=diretorio_destino,
+                nome_arquivo_tar=config.tar_nome_arquivo,
+                compressao=config.tar_compressao,
+                limpar_arquivos_originais=config.tar_limpar_originais
+            )
+            print(f"\n✅ Arquivo tar criado com sucesso: {arquivo_tar}")
+        except Exception as e:
+            print(f"\n❌ Erro ao criar arquivo tar: {e}")
 
 # Funções de conveniência para configurações comuns
 def gerar_arquivos_aleatorios(qtd=20, tipos_ativados=None, diretorio_destino=None):
@@ -1225,3 +1422,75 @@ def gerar(quantidade, template="equilibrado", diretorio=None):
         template=template,
         diretorio_destino=diretorio
     )
+
+def gerar_e_empacotar(
+    quantidade,
+    template="equilibrado",
+    diretorio=None,
+    compressao=None,
+    limpar_originais=False
+):
+    """
+    Gera arquivos e cria arquivo tar automaticamente.
+    
+    Esta função é uma conveniência que combina a geração de arquivos com a criação
+    de um arquivo tar. O nome do arquivo tar é gerado automaticamente usando hash SHA-1,
+    seguindo o mesmo padrão dos arquivos gerados.
+    
+    Args:
+        quantidade (int): Quantidade total de arquivos a gerar
+        template (str, optional): Template de percentual (padrão: "equilibrado")
+        diretorio (str, optional): Diretório de destino (padrão: do config.json)
+        compressao (str, optional): Tipo de compressão:
+            - None ou "": sem compressão (.tar) [DEFAULT]
+            - "gz": compressão gzip (.tar.gz)
+            - "bz2": compressão bzip2 (.tar.bz2)
+            - "xz": compressão xz (.tar.xz)
+        limpar_originais (bool, optional): Se True, remove arquivos originais após
+                                          criar o tar (padrão: False)
+    
+    Templates Disponíveis:
+        - "equilibrado": Distribuição personalizada (JPEG 7%, PNG 16%, PDF 61%, etc.)
+        - "foco_documentos": Foco em documentos (PDF 40%, DOCX 30%, TXT 20%, outros 10%)
+        - "foco_dados": Foco em planilhas (XLSX 50%, TXT 25%, PDF 15%, outros 10%)
+        - "foco_imagens": Foco em imagens (JPEG 30%, PNG 30%, PDF 20%, outros 20%)
+        - "minimal": Apenas texto e PDF (TXT 70%, PDF 30%)
+    
+    Exemplos:
+        >>> # Gerar 50 arquivos e empacotar sem compressão
+        >>> gerar_e_empacotar(50)
+        
+        >>> # Com compressão gzip
+        >>> gerar_e_empacotar(30, compressao="gz")
+        
+        >>> # Com compressão bzip2 e remoção dos originais
+        >>> gerar_e_empacotar(40, compressao="bz2", limpar_originais=True)
+        
+        >>> # Com template e diretório específicos
+        >>> gerar_e_empacotar(100, "foco_imagens", "minhas_imagens", "xz")
+        
+        >>> # Uso completo
+        >>> gerar_e_empacotar(
+        ...     quantidade=200,
+        ...     template="foco_documentos",
+        ...     diretorio="docs",
+        ...     compressao="gz",
+        ...     limpar_originais=False
+        ... )
+    """
+    # Obter percentuais do template
+    percentuais = obter_percentuais_padrao(template)
+    
+    # Criar configuração com TAR ativado
+    config = ConfiguracaoArquivos()
+    config.quantidade_total = quantidade
+    config.percentual_por_tipo = percentuais
+    config.criar_tar = True
+    config.tar_compressao = compressao
+    config.tar_limpar_originais = limpar_originais
+    
+    if diretorio:
+        config.diretorio_destino = diretorio
+    
+    # Gerar arquivos e criar tar
+    gerar_arquivos(config)

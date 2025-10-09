@@ -1,7 +1,10 @@
 {
   "configuracao_global": {
     "diretorio_padrao": "arquivos_teste",
-    "locale_faker": "pt_BR"
+    "locale_faker": "pt_BR",
+    "tar_ativado": false,
+    "tar_compressao": null,
+    "tar_limpar_originais": false
   },
   
   "tipos_arquivo_padrao": [
@@ -185,6 +188,22 @@
     "minimal": {
       "txt": 70,
       "pdf": 30
+    }
+  },
+  
+  "configuracoes_tar": {
+    "compressao_padrao": null,
+    "incluir_timestamp": true,
+    "prefixo_nome": "arquivos_gerados",
+    "limpar_originais": false,
+    "nivel_compressao_gz": 9,
+    "nivel_compressao_bz2": 9,
+    "nivel_compressao_xz": 6,
+    "descricao_compressao": {
+      "nenhum": "Sem compressão (.tar) - Mais rápido, maior tamanho",
+      "gz": "Compressão gzip (.tar.gz) - Rápido, boa compressão",
+      "bz2": "Compressão bzip2 (.tar.bz2) - Médio, muito boa compressão",
+      "xz": "Compressão xz (.tar.xz) - Lento, excelente compressão"
     }
   }
 }
