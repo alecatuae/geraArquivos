@@ -713,6 +713,266 @@ for template in templates:
 4. **Ciclos**: O buffer é automaticamente limpo entre ciclos
 5. **Monitoramento**: Acompanhe o diretório de destino
 
+## 🔄 Scripts Bash para Geração Recorrente
+
+Para automatizar a geração recorrente de múltiplos TARs, você pode usar scripts bash reutilizáveis. Ideal para processar grandes volumes em ciclos.
+
+### 📦 Script Bash - Empacotamento SEM Compressão
+
+**Use quando:** Prioridade é velocidade e você tem espaço em disco suficiente.
+
+**Arquivo:** `gerar_tars_sem_compressao.sh`
+
+```bash
+#!/bin/bash
+
+# Configurações
+QUANTIDADE=100
+CICLOS=10
+BUFFER="buffer_temp"
+DESTINO="tars_gerados"
+
+echo "📦 Gerador Recorrente de TARs (SEM compressão)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Arquivos por tar: $QUANTIDADE"
+echo "Ciclos: $CICLOS"
+echo "Formato: .tar (sem compressão)"
+echo "Destino: $DESTINO/"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+source venv/bin/activate
+
+for i in $(seq 1 $CICLOS); do
+    echo "📦 Ciclo $i/$CICLOS"
+    python -c "
+from geraArquivos import gerar_buffer_e_empacotar
+gerar_buffer_e_empacotar(
+    quantidade=$QUANTIDADE,
+    buffer='$BUFFER',
+    destino='$DESTINO'
+)
+"
+    echo ""
+done
+
+echo "✅ $CICLOS arquivos .tar criados em $DESTINO/"
+```
+
+**Como usar:**
+
+```bash
+# 1. Criar o arquivo
+nano gerar_tars_sem_compressao.sh
+# (cole o código acima)
+
+# 2. Dar permissão de execução
+chmod +x gerar_tars_sem_compressao.sh
+
+# 3. Executar
+./gerar_tars_sem_compressao.sh
+```
+
+**Saída esperada:**
+
+```
+📦 Gerador Recorrente de TARs (SEM compressão)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Arquivos por tar: 100
+Ciclos: 10
+Formato: .tar (sem compressão)
+Destino: tars_gerados/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 Ciclo 1/10
+
+======================================================================
+🔄 FLUXO BUFFER → TAR → DESTINO
+======================================================================
+1️⃣  Gerando arquivos no buffer: buffer_temp/
+2️⃣  Criando arquivo tar
+3️⃣  Movendo tar para destino: tars_gerados/
+4️⃣  Limpando buffer
+======================================================================
+
+[OK] Gerado: buffer_temp/xxxxx.pdf (0.52 MB)
+...
+✅ Total de arquivos gerados: 100
+
+📦 Criando arquivo tar...
+   📁 Buffer (origem): buffer_temp
+   📄 Arquivo tar: abc123...xyz.tar
+   📂 Destino do tar: tars_gerados
+   ✅ Tamanho do tar: 52.4 MB
+   🗑️  Removendo arquivos originais...
+   ✅ Diretório removido: buffer_temp
+
+✅ CICLO COMPLETO
+
+📦 Ciclo 2/10
+...
+
+✅ 10 arquivos .tar criados em tars_gerados/
+```
+
+**Resultado:** 10 arquivos `.tar` em `tars_gerados/` (~50MB cada)
+
+---
+
+### 📦 Script Bash - Empacotamento COM Compressão
+
+**Use quando:** Precisa economizar espaço em disco ou transferir pela rede.
+
+**Arquivo:** `gerar_tars_com_compressao.sh`
+
+```bash
+#!/bin/bash
+
+# Configurações
+QUANTIDADE=100
+CICLOS=10
+BUFFER="buffer_temp"
+DESTINO="tars_gerados"
+COMPRESSAO="gz"
+
+echo "📦 Gerador Recorrente de TARs (COM compressão)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Arquivos por tar: $QUANTIDADE"
+echo "Ciclos: $CICLOS"
+echo "Compressão: $COMPRESSAO"
+echo "Formato: .tar.$COMPRESSAO"
+echo "Destino: $DESTINO/"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+source venv/bin/activate
+
+for i in $(seq 1 $CICLOS); do
+    echo "📦 Ciclo $i/$CICLOS"
+    python -c "
+from geraArquivos import gerar_buffer_e_empacotar
+gerar_buffer_e_empacotar(
+    quantidade=$QUANTIDADE,
+    buffer='$BUFFER',
+    destino='$DESTINO',
+    compressao='$COMPRESSAO'
+)
+"
+    echo ""
+done
+
+echo "✅ $CICLOS arquivos .tar.$COMPRESSAO criados em $DESTINO/"
+```
+
+**Como usar:**
+
+```bash
+# 1. Criar o arquivo
+nano gerar_tars_com_compressao.sh
+# (cole o código acima)
+
+# 2. Dar permissão de execução
+chmod +x gerar_tars_com_compressao.sh
+
+# 3. Executar
+./gerar_tars_com_compressao.sh
+```
+
+**Saída esperada:**
+
+```
+📦 Gerador Recorrente de TARs (COM compressão)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Arquivos por tar: 100
+Ciclos: 10
+Compressão: gz
+Formato: .tar.gz
+Destino: tars_gerados/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 Ciclo 1/10
+
+======================================================================
+🔄 FLUXO BUFFER → TAR → DESTINO
+======================================================================
+1️⃣  Gerando arquivos no buffer: buffer_temp/
+2️⃣  Criando arquivo tar
+3️⃣  Movendo tar para destino: tars_gerados/
+4️⃣  Limpando buffer
+======================================================================
+
+[OK] Gerado: buffer_temp/xxxxx.pdf (0.52 MB)
+...
+✅ Total de arquivos gerados: 100
+
+📦 Criando arquivo tar...
+   📁 Buffer (origem): buffer_temp
+   📄 Arquivo tar: abc123...xyz.tar.gz
+   📂 Destino do tar: tars_gerados
+   🗜️  Compressão: gz
+   ✅ Tamanho original: 52.4 MB
+   ✅ Tamanho do tar: 26.2 MB
+   ✅ Taxa de compressão: 50.0%
+   🗑️  Removendo arquivos originais...
+   ✅ Diretório removido: buffer_temp
+
+✅ CICLO COMPLETO
+
+📦 Ciclo 2/10
+...
+
+✅ 10 arquivos .tar.gz criados em tars_gerados/
+```
+
+**Resultado:** 10 arquivos `.tar.gz` em `tars_gerados/` (~26MB cada - economia de 50%)
+
+---
+
+### 📊 Comparação: SEM vs COM Compressão
+
+| Característica | SEM Compressão (.tar) | COM Compressão (.tar.gz) |
+|----------------|-----------------------|--------------------------|
+| **Velocidade** | ⚡⚡⚡ Muito rápido | ⚡⚡ Rápido |
+| **Tamanho** | 📦 ~50MB (100 arquivos) | 📦 ~26MB (100 arquivos) |
+| **CPU** | 🔋 Baixo uso | 🔋 Médio uso |
+| **Economia** | ❌ 0% | ✅ ~50% |
+| **Uso recomendado** | Rede local, SSD rápido | Rede externa, economia de espaço |
+
+### 🎯 Personalizando os Scripts
+
+Você pode ajustar as variáveis no início do script:
+
+```bash
+# Configurações personalizáveis
+QUANTIDADE=100    # Arquivos por tar (10, 50, 100, 1000...)
+CICLOS=10         # Número de tars a gerar (5, 10, 20, 100...)
+BUFFER="buffer_temp"        # Nome do buffer temporário
+DESTINO="tars_gerados"      # Diretório de destino dos tars
+COMPRESSAO="gz"   # Tipo: "gz", "bz2", "xz" ou remova a linha para sem compressão
+```
+
+**Exemplos de uso:**
+
+```bash
+# Gerar 50 tars de 200 arquivos cada (10.000 arquivos total)
+QUANTIDADE=200
+CICLOS=50
+
+# Usar compressão máxima (bzip2)
+COMPRESSAO="bz2"
+
+# Organizar por data
+DESTINO="tars_$(date +%Y%m%d)"
+```
+
+### 💡 Dicas para Scripts Bash
+
+1. **Teste primeiro:** Comece com `CICLOS=3` e `QUANTIDADE=10` para validar
+2. **Monitore espaço:** Use `df -h` para verificar espaço em disco disponível
+3. **Logs:** Redirecione saída para arquivo: `./script.sh > log.txt 2>&1`
+4. **Background:** Execute em background: `./script.sh &`
+5. **Agendamento:** Use cron para execução automática
+
 ## 💡 Dicas Importantes
 
 1. **Comece Simples:** Use `gerar(10)` para testar primeiro
