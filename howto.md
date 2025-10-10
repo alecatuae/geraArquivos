@@ -560,6 +560,159 @@ python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(40, com
 python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(25, 'foco_imagens', 'imagens', 'bz2')"
 ```
 
+## 🔄 Fluxo Buffer → TAR → Destino (Novo!)
+
+### O que é o Fluxo Buffer?
+Um padrão avançado onde os arquivos são gerados em um **buffer temporário**, empacotados em tar, movidos para o **destino final** e o buffer é **automaticamente limpo**. Ideal para:
+- Processar arquivos em lotes (batches)
+- Gerar múltiplos tars em ciclos
+- Manter o sistema organizado (buffer sempre limpo)
+- Simulações de pipelines de dados
+
+### Fluxo Completo
+```
+1️⃣  Arquivos (JPEG, PNG, PDF, etc.) → BUFFER temporário
+2️⃣  Arquivos do buffer → Encapsulados em .tar
+3️⃣  Arquivo .tar → Movido para DESTINO final
+4️⃣  Buffer → LIMPO automaticamente (pronto para novo ciclo)
+```
+
+### Exemplo 1: Fluxo Básico
+```bash
+# No terminal, execute:
+source venv/bin/activate
+python -c "from geraArquivos import gerar_buffer_e_empacotar; gerar_buffer_e_empacotar(30)"
+```
+
+**Saída esperada:**
+```
+======================================================================
+🔄 FLUXO BUFFER → TAR → DESTINO
+======================================================================
+1️⃣  Gerando arquivos no buffer: buffer_temp/
+2️⃣  Criando arquivo tar
+3️⃣  Movendo tar para destino: arquivos_tar/
+4️⃣  Limpando buffer
+======================================================================
+
+[OK] Gerado: buffer_temp/xxxxx.pdf (0.52 MB)
+...
+
+✅ Total de arquivos gerados: 30
+
+📦 Criando arquivo tar...
+   📁 Buffer (origem): buffer_temp
+   📄 Arquivo tar: abc123...xyz.tar
+   📂 Destino do tar: arquivos_tar
+   🗑️  Removendo arquivos originais...
+   ✅ Diretório removido: buffer_temp
+
+✅ CICLO COMPLETO:
+   📁 Buffer usado: buffer_temp/
+   📦 Tar criado em: arquivos_tar/
+   🧹 Buffer limpo e pronto para novo ciclo
+```
+
+**Resultado:** 
+- Tar criado em `arquivos_tar/abc123...xyz.tar`
+- Buffer `buffer_temp/` foi completamente removido
+- Sistema pronto para novo ciclo
+
+### Exemplo 2: Com Compressão e Diretórios Personalizados
+```bash
+# No terminal, execute:
+source venv/bin/activate
+python -c "from geraArquivos import gerar_buffer_e_empacotar; gerar_buffer_e_empacotar(50, 'equilibrado', 'meu_buffer', 'meus_tars', 'gz')"
+```
+
+**Resultado:**
+- 50 arquivos gerados em `meu_buffer/`
+- Tar com gzip: `meus_tars/xxxxx.tar.gz`
+- `meu_buffer/` limpo automaticamente
+
+### Exemplo 3: Ciclos Múltiplos (Processamento em Lote)
+```bash
+# No terminal, execute:
+source venv/bin/activate
+python -c "
+from geraArquivos import gerar_buffer_e_empacotar
+
+# Gerar 5 lotes de arquivos
+for i in range(5):
+    print(f'\n📦 Lote {i+1}/5')
+    gerar_buffer_e_empacotar(
+        quantidade=20,
+        buffer='buffer_processamento',
+        destino='saida_lotes',
+        compressao='gz'
+    )
+"
+```
+
+**Resultado:**
+- 5 tars criados em `saida_lotes/`
+- Buffer reutilizado e limpo a cada ciclo
+- Processamento eficiente em lotes
+
+### Exemplo 4: Pipeline de Dados
+```bash
+# No terminal, execute:
+source venv/bin/activate
+python -c "
+from geraArquivos import gerar_buffer_e_empacotar
+
+# Simular pipeline: diferentes tipos de dados
+templates = ['foco_imagens', 'foco_documentos', 'foco_dados']
+
+for template in templates:
+    print(f'\n📊 Processando: {template}')
+    gerar_buffer_e_empacotar(
+        quantidade=30,
+        template=template,
+        buffer='pipeline_buffer',
+        destino='pipeline_output',
+        compressao='bz2'
+    )
+"
+```
+
+**Resultado:**
+- 3 tars categorizados em `pipeline_output/`
+- Buffer limpo entre cada categoria
+- Pipeline automatizado
+
+### 🎯 Quando Usar o Fluxo Buffer?
+
+✅ **Use Fluxo Buffer quando:**
+- Precisa gerar múltiplos lotes/batches
+- Quer manter o sistema organizado (sem arquivos soltos)
+- Está simulando pipelines de dados
+- Precisa de processamento cíclico
+- Quer separar geração (buffer) de armazenamento (destino)
+
+❌ **Use gerar_e_empacotar() quando:**
+- Precisa gerar apenas um tar
+- Quer manter os arquivos originais
+- Não precisa de ciclos múltiplos
+
+### 📊 Comparação: gerar_e_empacotar vs gerar_buffer_e_empacotar
+
+| Característica | gerar_e_empacotar() | gerar_buffer_e_empacotar() |
+|----------------|---------------------|---------------------------|
+| **Limpeza automática** | Opcional | Sempre |
+| **Buffer separado** | Não | Sim |
+| **Destino configurável** | Pasta pai | Diretório específico |
+| **Ciclos múltiplos** | Manual | Otimizado |
+| **Uso recomendado** | Tar único | Processamento em lotes |
+
+### 💡 Dicas para Fluxo Buffer
+
+1. **Buffer temporário**: Use nomes como `temp`, `buffer`, `staging`
+2. **Destino organizado**: Use nomes como `output`, `tars`, `final`
+3. **Compressão gzip**: Melhor equilíbrio para lotes
+4. **Ciclos**: O buffer é automaticamente limpo entre ciclos
+5. **Monitoramento**: Acompanhe o diretório de destino
+
 ## 💡 Dicas Importantes
 
 1. **Comece Simples:** Use `gerar(10)` para testar primeiro
@@ -595,7 +748,7 @@ source venv/bin/activate
 python -c "from geraArquivos import gerar; gerar(15, 'minimal', 'simples')"
 ```
 
-### Geração com TAR (Novo!)
+### Geração com TAR
 ```bash
 # TAR sem compressão
 source venv/bin/activate
@@ -608,6 +761,25 @@ python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(30, com
 # TAR e remover originais
 source venv/bin/activate
 python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(30, compressao='gz', limpar_originais=True)"
+```
+
+### Fluxo Buffer → TAR → Destino (Novo!)
+```bash
+# Fluxo básico
+source venv/bin/activate
+python -c "from geraArquivos import gerar_buffer_e_empacotar; gerar_buffer_e_empacotar(30)"
+
+# Com compressão e diretórios personalizados
+source venv/bin/activate
+python -c "from geraArquivos import gerar_buffer_e_empacotar; gerar_buffer_e_empacotar(50, buffer='temp', destino='output', compressao='gz')"
+
+# Ciclos múltiplos (processamento em lote)
+source venv/bin/activate
+python -c "
+from geraArquivos import gerar_buffer_e_empacotar
+for i in range(5):
+    gerar_buffer_e_empacotar(20, buffer='buffer', destino='tars', compressao='gz')
+"
 ```
 
 ## ✅ Checklist de Uso

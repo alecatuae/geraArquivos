@@ -103,6 +103,7 @@ class ConfiguracaoArquivos:
     tar_compressao: str = None  # None, "gz", "bz2", "xz"
     tar_nome_arquivo: str = None
     tar_limpar_originais: bool = False
+    tar_diretorio_destino: str = None  # Diretório destino do tar (separado do buffer)
     
     def __post_init__(self):
         """
@@ -257,7 +258,8 @@ def criar_arquivo_tar(
     diretorio_origem,
     nome_arquivo_tar=None,
     compressao=None,
-    limpar_arquivos_originais=False
+    limpar_arquivos_originais=False,
+    diretorio_destino_tar=None
 ):
     """
     Encapsula arquivos gerados em um arquivo tar.
@@ -278,6 +280,8 @@ def criar_arquivo_tar(
             - "xz": compressão xz (.tar.xz)
         limpar_arquivos_originais (bool): Se True, remove o diretório de arquivos
                                           originais após criar o tar (default: False)
+        diretorio_destino_tar (str, optional): Diretório onde salvar o arquivo tar.
+                                               Se None, salva na pasta pai do diretorio_origem
     
     Returns:
         str: Caminho completo do arquivo tar criado
@@ -331,16 +335,24 @@ def criar_arquivo_tar(
         # Gerar nome usando hash SHA-1
         nome_arquivo_tar = gerar_nome_tar_sha1(compressao)
     
-    # Caminho completo do arquivo tar (na pasta pai do diretório origem)
-    diretorio_pai = os.path.dirname(os.path.abspath(diretorio_origem))
-    if not diretorio_pai:
-        diretorio_pai = "."
-    caminho_tar = os.path.join(diretorio_pai, nome_arquivo_tar)
+    # Determinar diretório de destino do tar
+    if diretorio_destino_tar:
+        # Criar diretório de destino se não existir
+        os.makedirs(diretorio_destino_tar, exist_ok=True)
+        caminho_tar = os.path.join(diretorio_destino_tar, nome_arquivo_tar)
+    else:
+        # Caminho padrão: pasta pai do diretório origem
+        diretorio_pai = os.path.dirname(os.path.abspath(diretorio_origem))
+        if not diretorio_pai:
+            diretorio_pai = "."
+        caminho_tar = os.path.join(diretorio_pai, nome_arquivo_tar)
     
     # Informações sobre o processo
     print(f"\n📦 Criando arquivo tar...")
-    print(f"   📁 Diretório: {diretorio_origem}")
+    print(f"   📁 Buffer (origem): {diretorio_origem}")
     print(f"   📄 Arquivo tar: {nome_arquivo_tar}")
+    if diretorio_destino_tar:
+        print(f"   📂 Destino do tar: {diretorio_destino_tar}")
     print(f"   🗜️  Compressão: {compressao if compressao else 'Nenhuma (default)'}")
     print(f"   📊 Arquivos a empacotar: {len(arquivos)}")
     
@@ -1242,9 +1254,14 @@ def gerar_arquivos(config: ConfiguracaoArquivos = None, qtd_total=None):
                 diretorio_origem=diretorio_destino,
                 nome_arquivo_tar=config.tar_nome_arquivo,
                 compressao=config.tar_compressao,
-                limpar_arquivos_originais=config.tar_limpar_originais
+                limpar_arquivos_originais=config.tar_limpar_originais,
+                diretorio_destino_tar=config.tar_diretorio_destino
             )
             print(f"\n✅ Arquivo tar criado com sucesso: {arquivo_tar}")
+            
+            # Se limpar_originais está True, o buffer já foi limpo
+            if config.tar_limpar_originais:
+                print(f"   🧹 Buffer limpo: {diretorio_destino}")
         except Exception as e:
             print(f"\n❌ Erro ao criar arquivo tar: {e}")
 
@@ -1494,3 +1511,92 @@ def gerar_e_empacotar(
     
     # Gerar arquivos e criar tar
     gerar_arquivos(config)
+
+def gerar_buffer_e_empacotar(
+    quantidade,
+    template="equilibrado",
+    buffer="buffer_temp",
+    destino="arquivos_tar",
+    compressao=None
+):
+    """
+    Gera arquivos em buffer temporário, empacota em tar e move para destino.
+    
+    FLUXO COMPLETO:
+    1. Arquivos (JPEG, PNG, PDF, DOCX, XLSX, TXT) → Diretório BUFFER
+    2. Arquivos do buffer → Encapsulados em arquivo .tar
+    3. Arquivo .tar → Movido para DIRETÓRIO DE DESTINO
+    4. Buffer → LIMPO (pronto para próximo ciclo)
+    
+    Esta função implementa o fluxo buffer->tar->destino, onde:
+    - Buffer é temporário e sempre limpo após criar o tar
+    - Tar é salvo no diretório de destino
+    - Buffer fica pronto para novo ciclo
+    
+    Args:
+        quantidade (int): Quantidade total de arquivos a gerar
+        template (str, optional): Template de percentual (padrão: "equilibrado")
+        buffer (str, optional): Diretório buffer temporário (padrão: "buffer_temp")
+        destino (str, optional): Diretório destino do tar (padrão: "arquivos_tar")
+        compressao (str, optional): Tipo de compressão:
+            - None ou "": sem compressão (.tar) [DEFAULT]
+            - "gz": compressão gzip (.tar.gz)
+            - "bz2": compressão bzip2 (.tar.bz2)
+            - "xz": compressão xz (.tar.xz)
+    
+    Templates Disponíveis:
+        - "equilibrado": Distribuição personalizada (JPEG 7%, PNG 16%, PDF 61%, etc.)
+        - "foco_documentos": Foco em documentos (PDF 40%, DOCX 30%, TXT 20%, outros 10%)
+        - "foco_dados": Foco em planilhas (XLSX 50%, TXT 25%, PDF 15%, outros 10%)
+        - "foco_imagens": Foco em imagens (JPEG 30%, PNG 30%, PDF 20%, outros 20%)
+        - "minimal": Apenas texto e PDF (TXT 70%, PDF 30%)
+    
+    Exemplos:
+        >>> # Fluxo completo básico
+        >>> gerar_buffer_e_empacotar(30)
+        # Buffer: buffer_temp/ → Tar: arquivos_tar/xxxxx.tar
+        
+        >>> # Com compressão gzip
+        >>> gerar_buffer_e_empacotar(50, compressao="gz")
+        # Buffer: buffer_temp/ → Tar: arquivos_tar/xxxxx.tar.gz
+        
+        >>> # Com diretórios personalizados
+        >>> gerar_buffer_e_empacotar(40, "foco_imagens", "temp", "final", "bz2")
+        # Buffer: temp/ → Tar: final/xxxxx.tar.bz2
+        
+        >>> # Para ciclos contínuos
+        >>> for i in range(10):
+        ...     gerar_buffer_e_empacotar(20, buffer="buffer", destino="saida")
+        # Cada ciclo: buffer/ → saida/xxxxx.tar → buffer limpo
+    """
+    print(f"\n{'='*70}")
+    print(f"🔄 FLUXO BUFFER → TAR → DESTINO")
+    print(f"{'='*70}")
+    print(f"1️⃣  Gerando arquivos no buffer: {buffer}/")
+    print(f"2️⃣  Criando arquivo tar")
+    print(f"3️⃣  Movendo tar para destino: {destino}/")
+    print(f"4️⃣  Limpando buffer")
+    print(f"{'='*70}\n")
+    
+    # Obter percentuais do template
+    percentuais = obter_percentuais_padrao(template)
+    
+    # Criar configuração com TAR ativado
+    config = ConfiguracaoArquivos()
+    config.quantidade_total = quantidade
+    config.percentual_por_tipo = percentuais
+    config.diretorio_destino = buffer  # Buffer temporário
+    config.criar_tar = True
+    config.tar_compressao = compressao
+    config.tar_diretorio_destino = destino  # Destino final do tar
+    config.tar_limpar_originais = True  # Sempre limpa o buffer
+    
+    # Gerar arquivos e criar tar
+    gerar_arquivos(config)
+    
+    print(f"\n{'='*70}")
+    print(f"✅ CICLO COMPLETO:")
+    print(f"   📁 Buffer usado: {buffer}/")
+    print(f"   📦 Tar criado em: {destino}/")
+    print(f"   🧹 Buffer limpo e pronto para novo ciclo")
+    print(f"{'='*70}\n")

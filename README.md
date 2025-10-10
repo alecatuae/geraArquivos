@@ -123,6 +123,22 @@ python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(30, com
 python -c "from geraArquivos import gerar_e_empacotar; gerar_e_empacotar(30, compressao='gz', limpar_originais=True)"
 ```
 
+### Fluxo Buffer → TAR → Destino (Novo!)
+```bash
+# Fluxo completo: buffer temporário → tar → destino final → limpar buffer
+python -c "from geraArquivos import gerar_buffer_e_empacotar; gerar_buffer_e_empacotar(30)"
+
+# Com compressão gzip
+python -c "from geraArquivos import gerar_buffer_e_empacotar; gerar_buffer_e_empacotar(30, buffer='temp', destino='saida', compressao='gz')"
+
+# Ciclos múltiplos (buffer sempre limpo entre ciclos)
+python -c "
+from geraArquivos import gerar_buffer_e_empacotar
+for i in range(5):
+    gerar_buffer_e_empacotar(20, buffer='buffer', destino='tars')
+"
+```
+
 ### Gerador Infinito (Avançado)
 ```bash
 # Teste inicial (3 iterações)
